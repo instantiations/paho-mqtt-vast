@@ -183,7 +183,7 @@ set(ES_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include/es
         CACHE PATH "ES: Includes")
 include_directories(${ES_INCLUDES})
 find_library(ES_LIBRARY
-	NAMES esvm40.so esvm40.dll
+	NAMES esvm40 esvm40.so
 	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib/es" ${CUSTOM_ES_LIBRARY}
     NO_DEFAULT_PATH)
 set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
