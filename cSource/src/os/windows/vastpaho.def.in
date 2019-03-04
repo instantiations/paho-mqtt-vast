@@ -1,0 +1,5 @@
+LIBRARY	@VAST_PAHO_LIBNAME@
+EXPORTS
+    MqttVastRegisterCallback
+	MqttVastCheckpoint
+

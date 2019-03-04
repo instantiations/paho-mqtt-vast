@@ -1,0 +1,275 @@
+#*******************************************************************************
+#  Copyright (c) 2019 Instantiations, Inc
+#
+#  Distributed under the MIT License (see License.txt file)
+#
+#  Contributors:
+#     Seth Berman - initial version
+#*******************************************************************************/
+cmake_minimum_required(VERSION 3.0..3.13)
+project(paho-mqtt-vast)
+
+if (POLICY CMP0075)
+    cmake_policy(SET CMP0075 NEW)
+endif ()
+
+set(VAST_PAHO_LIBNAME paho-mqtt3c-vast)
+
+#-- RelWithDebInfo (None Debug Release RelWithDebInfo MinSizeRel)
+if (CMAKE_BUILD_TYPE STREQUAL "")
+    set(DEFAULT_BUILD_TYPE "Debug")
+    message(STATUS "Build type not specified. DEFAULT: ${DEFAULT_BUILD_TYPE}")
+    set(CMAKE_BUILD_TYPE ${DEFAULT_BUILD_TYPE}
+            CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+endif ()
+
+#-- Do not allow in-source builds.
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+    message(FATAL_ERROR
+            "Please create a separate folder called 'build' and do the builds in there.\n"
+            "Git/Mercurial will ignore $ROOT/build and we can keep things clean\n"
+            "Example:\n"
+            "  rm -rf CMakeFiles CMakeCache.txt\n"
+            "  mkdir build\n"
+            "  cd build\n"
+            "  cmake ..")
+endif ()
+
+#------------------------------------------------------------------
+# Version Settings
+#------------------------------------------------------------------
+#-- Today
+string(TIMESTAMP VASTPAHO_DATE "%m/%d/%y")
+string(TIMESTAMP VASTPAHO_YEAR "%Y")
+
+#-- Copyright
+set(VASTPAHO_SHORT_COPYRIGHT "(C) Copyright Instantiations 1994, ${VASTPAHO_YEAR}")
+set(VASTPAHO_LONG_COPYRIGHT "${VASTPAHO_SHORT_COPYRIGHT}. All rights reserved.")
+
+#-- Define Product ID settings
+set(VASTPAHO_PRODUCT_VERSION_MAJOR 0)
+set(VASTPAHO_PRODUCT_VERSION_MINOR 1)
+set(VASTPAHO_PRODUCT_VERSION_MOD 0)
+#-- The period-delimited 3 position format (1.0.0)
+set(VASTPAHO_PRODUCT_VERSION "${VASTPAHO_PRODUCT_VERSION_MAJOR}.${VASTPAHO_PRODUCT_VERSION_MINOR}.${VASTPAHO_PRODUCT_VERSION_MOD}")
+#-- The comma-delimited 3 position format (1,0,0)
+set(VASTPAHO_PRODUCT_VERSION_FOR_WINDOWS_DEF "${VASTPAHO_PRODUCT_VERSION_MAJOR},${VASTPAHO_PRODUCT_VERSION_MINOR},${VASTPAHO_PRODUCT_VERSION_MOD}")
+#-- The 2 digit format (85)
+set(VASTPAHO_PRODUCT_SUFFIX "${VASTPAHO_PRODUCT_VERSION_MAJOR}${VASTPAHO_PRODUCT_VERSION_MINOR}")
+#-- The period-delimited 2 position format (8.5)
+set(VASTPAHO_PRODUCT_SUBDIR "${VASTPAHO_PRODUCT_VERSION_MAJOR}.${VASTPAHO_PRODUCT_VERSION_MINOR}")
+
+#------------------------------------------------------------------
+# Option Settings
+#------------------------------------------------------------------
+option(BUILD_TESTING "Build testsuite" OFF)
+option(BUILD_DOCUMENTATION "Build documentation" OFF)
+
+#------------------------------------------------------------------
+# Output Settings
+#------------------------------------------------------------------
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+#------------------------------------------------------------------
+# Bitness Settings
+#------------------------------------------------------------------
+if (CMAKE_SIZEOF_VOID_P MATCHES 8)
+    if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+        set(VA_64BIT TRUE CACHE BOOL "Build 64-bit binaries")
+    else ()
+        set(VA_64BIT TRUE INTERNAL)
+    endif ()
+endif ()
+
+#------------------------------------------------------------------
+# GCC Settings
+#------------------------------------------------------------------
+if (CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc")
+endif ()
+
+#------------------------------------------------------------------
+# DEP & ASLR Settings
+#------------------------------------------------------------------
+if (MSVC)
+    message(STATUS "Enabling DEP & ASLR")
+    # All of these options are on by default for the latest MS compiler versions; still it's worth to keep them here.
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DYNAMICBASE /NXCOMPAT")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE /NXCOMPAT")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /DYNAMICBASE /NXCOMPAT")
+    if (VM_64BIT)
+        message(STATUS "Enabling high entropy ASLR")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /HIGHENTROPYVA")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /HIGHENTROPYVA")
+        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /HIGHENTROPYVA")
+    endif ()
+elseif (MINGW)
+    message(STATUS "Enabling DEP & ASLR")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--dynamicbase -Wl,--nxcompat")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--dynamicbase -Wl,--nxcompat")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--dynamicbase -Wl,--nxcompat")
+    if (VM_64BIT)
+        message(STATUS "Enabling high entropy ASLR")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--high-entropy-va")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--high-entropy-va")
+        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--high-entropy-va")
+    endif ()
+elseif (WIN32)
+    message(WARNING "****** DEP & ASLR are not enabled for this windows build system")
+endif ()
+
+#------------------------------------------------------------------
+# 3rd Party Module: Plibsys
+#------------------------------------------------------------------
+include(ExternalProject)
+set(PLIBSYS_PROJ_NAME plibsys)
+set(PLIBSYS_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty/plibsys)
+set(PLIBSYS_BIN_ROOT ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty/plibsys)
+ExternalProject_Add(
+        ${PLIBSYS_PROJ_NAME}
+        GIT_REPOSITORY https://github.com/saprykin/plibsys.git
+        GIT_TAG tags/0.0.4
+        GIT_SHALLOW true
+        GIT_PROGRESS true
+        SOURCE_DIR ${PLIBSYS_SRC_ROOT}
+        BINARY_DIR ${PLIBSYS_BIN_ROOT}
+        EXCLUDE_FROM_ALL 1
+        UPDATE_DISCONNECTED 1
+        STEP_TARGETS build
+        CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${PLIBSYS_BIN_ROOT}
+        -DPLIBSYS_BUILD_DOC=${BUILD_DOCUMENTATION}
+        -DPLIBSYS_TESTS=${BUILD_TESTING}
+)
+include_directories(${PLIBSYS_SRC_ROOT}/src)
+include_directories(${PLIBSYS_BIN_ROOT})
+if(MSVC)
+	set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/plibsysstatic.lib)
+else()
+	set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/libplibsysstatic.a)
+endif()
+set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${PLIBSYS_PROJ_NAME})
+
+#------------------------------------------------------------------
+# 3rd Party Module: MQTT-Paho
+#------------------------------------------------------------------
+set(MQTT_PAHO_PROJ_NAME mqtt-paho)
+set(MQTT_PAHO_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty/mqtt-paho-c)
+set(MQTT_PAHO_BIN_ROOT ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty/mqtt-paho-c)
+ExternalProject_Add(
+        ${MQTT_PAHO_PROJ_NAME}
+        GIT_REPOSITORY https://github.com/eclipse/paho.mqtt.c.git
+        GIT_TAG tags/v1.3.0
+        GIT_SHALLOW true
+        GIT_PROGRESS true
+        SOURCE_DIR ${MQTT_PAHO_SRC_ROOT}
+        BINARY_DIR ${MQTT_PAHO_BIN_ROOT}
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        LOG_DOWNLOAD ON
+)
+include_directories(${MQTT_PAHO_SRC_ROOT}/src)
+set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
+
+#------------------------------------------------------------------
+# Module: VA Smalltalk Virtual Machine
+#------------------------------------------------------------------
+set(ES_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include/es
+        CACHE PATH "ES: Includes")
+include_directories(${ES_INCLUDES})
+find_library(ES_LIBRARY
+	NAMES esvm40.so esvm40.dll
+	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib/es" ${CUSTOM_ES_LIBRARY}
+    NO_DEFAULT_PATH)
+set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
+
+#------------------------------------------------------------------
+# Common Build Instructions
+#------------------------------------------------------------------
+set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include
+        CACHE PATH "VAST PAHO: Headers")
+include_directories(${VAST_PAHO_INCLUDES})
+
+set(VAST_PAHO_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncArguments.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncArguments.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncMessages.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncMessages.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttCallbacks.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttCallbacks.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttLibrary.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttLibrary.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttUserPrims.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttUserPrims.c)
+
+#------------------------------------------------------------------
+# OS-Dependent Build Instructions
+#------------------------------------------------------------------
+#-- Add the platform specific subdirectory
+if (WIN32 AND NOT CYGWIN)
+    #-- Configure sources
+    configure_file(
+            ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/os/windows/vastpaho.def.in
+            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.def)
+    configure_file(
+            ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/os/windows/vastpaho.rc.in
+            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.rc)
+
+    #-- Add windows sources
+    set(VAST_PAHO_SOURCES ${VAST_PAHO_SOURCES}
+            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.def
+            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.rc)
+
+    set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ws2_32)
+
+elseif (UNIX AND NOT APPLE)
+
+    #-- Add unix flavor build defs
+    if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+
+        if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(i686)|(i386)|(x86)|(X86)|(amd64)|(AMD64)")
+            add_definitions(-DLINUX_386)
+        elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
+            add_definitions(-DLINUX_ARM)
+        else ()
+            message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR} is not supported")
+        endif ()
+
+        #-- Add Linux compiler definition
+        add_definitions(-DLINUX_ANY)
+
+    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "AIX")
+
+        #-- Add AIX compiler definition
+        add_definitions(-DAIXPPC -DRS6000)
+
+    elseif (${CMAKE_SYSTEM_NAME} MATCHES "(Solaris|SunOS)")
+
+        #-- Add Solaris compiler definition
+        add_definitions(-DSOLARIS)
+
+    else ()
+        message(FATAL_ERROR "Unsupported Unix Platform")
+    endif ()
+
+else ()
+    message(FATAL_ERROR "Unsupported Platform")
+endif ()
+
+#------------------------------------------------------------------
+# Generate the helper library
+#------------------------------------------------------------------
+add_library(${VAST_PAHO_LIBNAME} SHARED ${VAST_PAHO_SOURCES})
+add_dependencies(${VAST_PAHO_LIBNAME} ${VAST_PAHO_DEPS})
+target_link_libraries(${VAST_PAHO_LIBNAME} PRIVATE ${VAST_PAHO_LIBS})
+
+#-- Don't prefix with 'lib' on gcc
+#-- This is for backwards compatibility
+if (UNIX OR CMAKE_COMPILER_IS_GNUCC)
+    set_target_properties(${VAST_PAHO_LIBNAME} PROPERTIES PREFIX "")
+endif ()

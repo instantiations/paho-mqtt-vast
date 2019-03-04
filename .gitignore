@@ -1,0 +1,8 @@
+/.project
+/.idea
+build
+/kdev4
+/thirdparty/mqtt-paho-c
+/thirdparty/plibsys
+/lib/es
+
