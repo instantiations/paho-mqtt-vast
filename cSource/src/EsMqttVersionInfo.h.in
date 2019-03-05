@@ -1,0 +1,18 @@
+/*******************************************************************************
+ *  Copyright (c) 2019 Instantiations, Inc
+ *
+ *  Distributed under the MIT License (see License.txt file)
+ *
+ *  @file EsMqttVersionInfo.h
+ *  @brief Version Information
+ *  @author Seth Berman
+ *******************************************************************************/
+#ifndef ES_MQTT_VERSIONINFO_H
+#define ES_MQTT_VERSIONINFO_H
+
+#define ES_MQTT_VERSION_MAJOR   @VASTPAHO_PRODUCT_VERSION_MAJOR@
+#define ES_MQTT_VERSION_MINOR   @VASTPAHO_PRODUCT_VERSION_MINOR@
+#define ES_MQTT_VERSION_MOD     @VASTPAHO_PRODUCT_VERSION_MOD@
+#define ES_MQTT_VERSION_STR     "@VASTPAHO_PRODUCT_VERSION@"
+
+#endif //ES_MQTT_VERSIONINFO_H

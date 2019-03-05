@@ -82,11 +82,29 @@ EsDeclareUserPrimitive(MqttVastRegisterCallback);
  * Arg1: Pass-through unique id
  * Returns: receiver (self)
  *
+ * C Arguments
  * @param EsPrimVMContext
  * @param EsPrimArgumentCount
  * @param EsPrimPushCount
  * @return TRUE
  */
 EsDeclareUserPrimitive(MqttVastCheckpoint);
+
+/**
+ * @brief Answers a Smalltalk String representation
+ * of the product version (major.minor.mod).
+ *
+ * @example 1.0.0
+ *
+ * Smalltalk Arguments
+ * [None]
+ *
+ * C Arguments
+ * @param EsPrimVMContext
+ * @param EsPrimArgumentCount
+ * @param EsPrimPushCount
+ * @return TRUE
+ */
+EsDeclareUserPrimitive(MqttVastVersionString);
 
 #endif //ES_MQTT_USER_PRIMS_H

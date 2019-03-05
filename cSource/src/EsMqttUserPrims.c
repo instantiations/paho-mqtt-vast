@@ -14,6 +14,7 @@
 #include "EsMqttCallbacks.h"
 #include "EsMqttLibrary.h"
 #include "EsMqttAsyncMessages.h"
+#include "EsMqttVersionInfo.h"
 
 /*************************************************************/
 /*      I N T E R F A C E  I M P L E M E N T A T I O N       */
@@ -80,4 +81,15 @@ EsUserPrimitive(MqttVastCheckpoint) {
     rc = EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_CHECKPOINT, 1, id);
 
     EsPrimSucceedBoolean(rc);
+}
+
+EsUserPrimitive(MqttVastVersionString) {
+    EsObject string;
+    U_32 rc;
+
+    rc = EsCStringToString(ES_MQTT_VERSION_STR, &string);
+    if (ES_UNLIKELY(rc != EsPrimErrNoError)) {
+        EsPrimFail(rc, 0);
+    }
+    EsPrimSucceed(string);
 }

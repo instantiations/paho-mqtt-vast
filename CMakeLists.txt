@@ -200,8 +200,16 @@ set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
 #------------------------------------------------------------------
 set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
         ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include
+        ${CMAKE_CURRENT_BINARY_DIR}/cSource/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src
+        ${CMAKE_CURRENT_BINARY_DIR}/cSource/src
         CACHE PATH "VAST PAHO: Headers")
 include_directories(${VAST_PAHO_INCLUDES})
+
+#-- Configure headers
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttVersionInfo.h.in
+        ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/EsMqttVersionInfo.h)
 
 set(VAST_PAHO_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncArguments.h
@@ -213,7 +221,8 @@ set(VAST_PAHO_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttLibrary.h
         ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttLibrary.c
         ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttUserPrims.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttUserPrims.c)
+        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttUserPrims.c
+        ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/EsMqttVersionInfo.h)
 
 #------------------------------------------------------------------
 # OS-Dependent Build Instructions

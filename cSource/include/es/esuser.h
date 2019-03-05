@@ -74,6 +74,7 @@ BOOLEAN VMCALL name (EsVMContext EsPrimVMContext, U_32 EsPrimArgumentCount, U_32
 
 #define EsPrimArgNumSelf                0
 #define EsPrimArgNumNoArg               (-1)
+#define EsPrimErrNoError                0
 #define EsPrimErrInvalidClass           1
 #define EsPrimErrInvalidArgumentCount   17
 #define EsPrimArgument(n)               (EsPrimVMContext->sp[EsPrimPushCount-(n)])
@@ -98,10 +99,14 @@ extern U_32 VMCALL EsMakeUnsignedInteger(U_32, EsObject *, EsVMContext);
 
 extern U_32 VMCALL EsMakeUnsignedInt64(U_64, EsObject *, EsVMContext);
 
+extern U_32 VMCALL EsMakeString(char *, EsObject *, EsVMContext);
+
 #ifndef ES_ARCH64
 #define EsMakePointerInteger EsMakeUnsignedInteger
 #else
 #define EsMakePointerInteger EsMakeUnsignedInt64
 #endif // ES_ARCH64
+
+#define EsCStringToString(val, o) EsMakeString((val), (o), EsPrimVMContext)
 
 #endif /* ESUSER_H */
