@@ -127,6 +127,12 @@ include(ExternalProject)
 set(PLIBSYS_PROJ_NAME plibsys)
 set(PLIBSYS_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty/plibsys)
 set(PLIBSYS_BIN_ROOT ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty/plibsys)
+#-- Raspbian Check and Fix
+if (NOT DEFINED ${CMAKE_C_COMPILER_ID} AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
+    set(PLIBSYS_COMPILER_ID GNU)
+else ()
+    set(PLIBSYS_COMPILER_ID ${CMAKE_C_COMPILER_ID})
+endif ()
 ExternalProject_Add(
         ${PLIBSYS_PROJ_NAME}
         GIT_REPOSITORY https://github.com/saprykin/plibsys.git
@@ -140,18 +146,19 @@ ExternalProject_Add(
         STEP_TARGETS build
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_ARGS
-			-DCMAKE_INSTALL_PREFIX=${PLIBSYS_BIN_ROOT}
-			-DPLIBSYS_BUILD_DOC=${BUILD_DOCUMENTATION}
-			-DPLIBSYS_TESTS=${BUILD_TESTING}
-			-DCMAKE_C_FLAGS="-fPIC"
+        -DCMAKE_INSTALL_PREFIX=${PLIBSYS_BIN_ROOT}
+        -DPLIBSYS_BUILD_DOC=${BUILD_DOCUMENTATION}
+        -DPLIBSYS_TESTS=${BUILD_TESTING}
+        -DCMAKE_C_FLAGS="-fPIC"
+        -DCMAKE_C_COMPILER_ID=${PLIBSYS_COMPILER_ID}
 )
 include_directories(${PLIBSYS_SRC_ROOT}/src)
 include_directories(${PLIBSYS_BIN_ROOT})
-if(MSVC)
-	set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/plibsysstatic.lib)
-else()
-	set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/libplibsysstatic.a)
-endif()
+if (MSVC)
+    set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/plibsysstatic.lib)
+else ()
+    set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/libplibsysstatic.a)
+endif ()
 set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${PLIBSYS_PROJ_NAME})
 
 #------------------------------------------------------------------
@@ -183,9 +190,9 @@ set(ES_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include/es
         CACHE PATH "ES: Includes")
 include_directories(${ES_INCLUDES})
 find_library(ES_LIBRARY
-	NAMES esvm40 esvm40.so
-	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib/es" ${CUSTOM_ES_LIBRARY}
-    NO_DEFAULT_PATH)
+        NAMES esvm40 esvm40.so
+        PATHS "${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib/es" ${CUSTOM_ES_LIBRARY}
+        NO_DEFAULT_PATH)
 set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
 
 #------------------------------------------------------------------
