@@ -8,6 +8,8 @@
 #*******************************************************************************/
 cmake_minimum_required(VERSION 3.0..3.13)
 project(paho-mqtt-vast)
+message(STATUS "CMake version: " ${CMAKE_VERSION})
+message(STATUS "CMake system name: " ${CMAKE_SYSTEM_NAME})
 
 if (POLICY CMP0075)
     cmake_policy(SET CMP0075 NEW)
@@ -18,9 +20,11 @@ set(VAST_PAHO_LIBNAME paho-mqtt3c-vast)
 #-- RelWithDebInfo (None Debug Release RelWithDebInfo MinSizeRel)
 if (CMAKE_BUILD_TYPE STREQUAL "")
     set(DEFAULT_BUILD_TYPE "Debug")
-    message(STATUS "Build type not specified. DEFAULT: ${DEFAULT_BUILD_TYPE}")
+    message(STATUS "CMake build type not specified. DEFAULT: ${DEFAULT_BUILD_TYPE}")
     set(CMAKE_BUILD_TYPE ${DEFAULT_BUILD_TYPE}
             CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+else ()
+    message(STATUS "CMake build type: " ${CMAKE_BUILD_TYPE})
 endif ()
 
 #-- Do not allow in-source builds.
@@ -77,9 +81,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 #------------------------------------------------------------------
 if (CMAKE_SIZEOF_VOID_P MATCHES 8)
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        set(VA_64BIT TRUE CACHE BOOL "Build 64-bit binaries")
+        set(ES_64BIT TRUE CACHE BOOL "Build 64-bit binaries")
     else ()
-        set(VA_64BIT TRUE INTERNAL)
+        set(ES_64BIT TRUE INTERNAL)
     endif ()
 endif ()
 
@@ -99,7 +103,7 @@ if (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DYNAMICBASE /NXCOMPAT")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE /NXCOMPAT")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /DYNAMICBASE /NXCOMPAT")
-    if (VM_64BIT)
+    if (ES_64BIT)
         message(STATUS "Enabling high entropy ASLR")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /HIGHENTROPYVA")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /HIGHENTROPYVA")
@@ -110,7 +114,7 @@ elseif (MINGW)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--dynamicbase -Wl,--nxcompat")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--dynamicbase -Wl,--nxcompat")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--dynamicbase -Wl,--nxcompat")
-    if (VM_64BIT)
+    if (ES_64BIT)
         message(STATUS "Enabling high entropy ASLR")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--high-entropy-va")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--high-entropy-va")
@@ -124,6 +128,8 @@ endif ()
 # 3rd Party Module: Plibsys
 #------------------------------------------------------------------
 include(ExternalProject)
+option(PLIBSYS_BUILD_DOC "Build plibsys documentation" OFF)
+option(PLIBSYS_TESTS "Build plibsys tests" OFF)
 set(PLIBSYS_PROJ_NAME plibsys)
 set(PLIBSYS_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty/plibsys)
 set(PLIBSYS_BIN_ROOT ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty/plibsys)
@@ -147,18 +153,24 @@ ExternalProject_Add(
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=${PLIBSYS_BIN_ROOT}
-        -DPLIBSYS_BUILD_DOC=${BUILD_DOCUMENTATION}
-        -DPLIBSYS_TESTS=${BUILD_TESTING}
+        -DPLIBSYS_BUILD_DOC=${PLIBSYS_BUILD_DOC}
+        -DPLIBSYS_TESTS=${PLIBSYS_TESTS}
         -DCMAKE_C_FLAGS="-fPIC"
         -DCMAKE_C_COMPILER_ID=${PLIBSYS_COMPILER_ID}
 )
 include_directories(${PLIBSYS_SRC_ROOT}/src)
 include_directories(${PLIBSYS_BIN_ROOT})
 if (MSVC)
-    set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/plibsysstatic.lib)
+    set(PLIBSYS_LIBRARY ${PLIBSYS_BIN_ROOT}/lib/plibsysstatic.lib)
 else ()
-    set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_BIN_ROOT}/lib/libplibsysstatic.a)
+    set(PLIBSYS_LIBRARY ${PLIBSYS_BIN_ROOT}/lib/libplibsysstatic.a)
 endif ()
+if (EXISTS ${PLIBSYS_LIBRARY})
+    message(STATUS "Found Plibysys Library: ${PLIBSYS_LIBRARY}")
+else ()
+    message(FATAL_ERROR "Could not locate Plibsys Library")
+endif ()
+set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_LIBRARY})
 set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${PLIBSYS_PROJ_NAME})
 
 #------------------------------------------------------------------
@@ -193,6 +205,7 @@ find_library(ES_LIBRARY
         NAMES esvm40 esvm40.so
         PATHS "${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib/es" ${CUSTOM_ES_LIBRARY}
         NO_DEFAULT_PATH)
+message(STATUS "Found VA Smalltalk VM Library: ${ES_LIBRARY}")
 set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
 
 #------------------------------------------------------------------
