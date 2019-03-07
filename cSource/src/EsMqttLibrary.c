@@ -22,30 +22,32 @@
 /**
  * @brief Boolean to check if the module is initialized
  */
-static volatile I_32 _IsInitialized = 0;
+static volatile I_32 _LibraryState = ESMQTT_LIBRARY_UNINIT;
 
 /*************************************************************/
 /*      I N T E R F A C E  I M P L E M E N T A T I O N       */
 /*************************************************************/
 
 void EsMqttLibraryInit(EsGlobalInfo *globalInfo) {
-    if (!_IsInitialized) {
+    if (p_atomic_int_compare_and_exchange(&_LibraryState, ESMQTT_LIBRARY_UNINIT, ESMQTT_LIBRARY_INIT)) {
         p_libsys_init();
         EsMqttAsyncArgumentsInit(globalInfo);
         EsMqttAsyncMessagesInit(globalInfo);
         EsMqttCallbacksInit(globalInfo);
         EsMqttUserPrimsInit(globalInfo);
-        _IsInitialized = 1;
     }
 }
 
 void EsMqttLibraryShutdown() {
-    if (_IsInitialized) {
-        EsMqttUserPrimsShutdown();
-        EsMqttCallbacksShutdown();
-        EsMqttAsyncMessagesShutdown();
+    if (p_atomic_int_compare_and_exchange(&_LibraryState, ESMQTT_LIBRARY_INIT, ESMQTT_LIBRARY_SHUTDOWN)) {
         EsMqttAsyncArgumentsShutdown();
+        EsMqttAsyncMessagesShutdown();
+        EsMqttCallbacksShutdown();
+        EsMqttUserPrimsShutdown();
         p_libsys_shutdown();
-        _IsInitialized = 0;
     }
+}
+
+enum EsMqttLibraryState EsMqttGetLibraryState() {
+    return _LibraryState;
 }
