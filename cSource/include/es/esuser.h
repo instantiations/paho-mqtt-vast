@@ -19,7 +19,7 @@
 #include "escompiler.h"
 
 /********************************************/
-/*	S M A L L T A L K  I M M E D I A T E S  */
+/*  S M A L L T A L K  I M M E D I A T E S  */
 /********************************************/
 #define EsTrue                          ((EsObject) 0x1E)
 #define EsFalse                         ((EsObject) 0x2E)
@@ -36,7 +36,7 @@
 #define EsSmallIntegerToI32(o)          ((EsPrivateSmallIntegerAsI32(o)) >> EsShiftSmallInteger)
 
 /**********************************/
-/*	S M A L L T A L K  T Y P E S  */
+/*  S M A L L T A L K  T Y P E S  */
 /**********************************/
 typedef void *EsObject;
 
@@ -62,8 +62,8 @@ typedef struct ESGlobalInfo {
 typedef ESVMContext *EsVMContext;
 typedef ESGlobalInfo EsGlobalInfo;
 
-/*********************************/
-/* U S E R  P R I M I T I V E S  */
+/**********************************/
+/*  U S E R  P R I M I T I V E S  */
 /*********************************/
 #define EsDeclareUserPrimitive(name) \
 BOOLEAN VMCALL name (EsVMContext EsPrimVMContext, U_32 EsPrimArgumentCount, U_32 EsPrimPushCount);

@@ -14,9 +14,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-/**********************/
-/*	B I T N E S S	  */
-/**********************/
+/********************/
+/*  B I T N E S S   */
+/********************/
 #ifdef _MSC_VER
 #  if defined(_M_X64) || defined(_M_AMD64)
 #	 define ES_ARCH64
@@ -39,7 +39,7 @@
 #endif /* 32/64 bitness */
 
 /**************************************/
-/*	B R A N C H	 P R E D I C T I O N  */
+/*  B R A N C H  P R E D I C T I O N  */
 /**************************************/
 #if (defined(_MSC_VER) && !defined(__clang__))
 #	define ES_LIKELY(x) (x)
@@ -52,9 +52,9 @@
 #	define ES_UNLIKELY(x)
 #endif /* Branch Prediction */
 
-/**************************/
-/*	D A T A	 T Y P E S	  */
-/**************************/
+/************************/
+/*  D A T A	 T Y P E S  */
+/************************/
 typedef int8_t I_8;
 typedef uint8_t U_8;
 typedef int16_t I_16;
