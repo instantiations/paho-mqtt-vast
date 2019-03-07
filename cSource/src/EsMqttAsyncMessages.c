@@ -106,7 +106,7 @@ static ESVMContext _DummyVMContext;
  * An adjacent even/odd pair is the EsObject class>>selector
  * to activate for an async message
  */
-#define ASYNC_MSG_TARGETS_SIZE      NUM_MQTT_CALLBACKS * 2
+#define ASYNC_MSG_TARGETS_SIZE      (NUM_MQTT_CALLBACKS * 2)
 static EsObject _AsyncMessageTargets[ASYNC_MSG_TARGETS_SIZE] = {EsNil};
 
 /**
@@ -234,7 +234,9 @@ static BOOLEAN setAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject
  * @return TRUE if success, FALSE otherwise
  */
 static BOOLEAN getAsyncMessageHandler(enum MqttVastCallbackTypes cbType, AsyncMessageHandlerFunc **handlerPtr) {
-    if ((handlerPtr != NULL) && EsIsValidCallbackType(cbType)) {
+    if (handlerPtr == NULL) {
+        return FALSE;
+    } else if (EsIsValidCallbackType(cbType)) {
         *handlerPtr = _AsyncMessageHandlers[cbType];
         return TRUE;
     } else {
@@ -388,6 +390,7 @@ static BOOLEAN checkpointHandler(EsObject receiver, EsObject selector, va_list a
 /*************************************************************/
 void EsMqttAsyncMessagesInit(EsGlobalInfo *globalInfo) {
     _DummyVMContext.globalInfo = globalInfo;
+    _AsyncMessageTargetsLock = p_rwlock_new();
 }
 
 void EsMqttAsyncMessagesShutdown() {
