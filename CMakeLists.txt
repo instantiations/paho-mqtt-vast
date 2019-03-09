@@ -165,11 +165,6 @@ if (MSVC)
 else ()
     set(PLIBSYS_LIBRARY ${PLIBSYS_BIN_ROOT}/lib/libplibsysstatic.a)
 endif ()
-if (EXISTS ${PLIBSYS_LIBRARY})
-    message(STATUS "Found Plibysys Library: ${PLIBSYS_LIBRARY}")
-else ()
-    message(FATAL_ERROR "Could not locate Plibsys Library")
-endif ()
 set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_LIBRARY})
 set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${PLIBSYS_PROJ_NAME})
 
@@ -256,6 +251,8 @@ if (WIN32 AND NOT CYGWIN)
             ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.rc)
 
     set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ws2_32)
+
+    add_definitions(-DWINDOWS)
 
 elseif (UNIX AND NOT APPLE)
 
