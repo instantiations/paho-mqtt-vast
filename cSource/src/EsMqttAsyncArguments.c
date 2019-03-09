@@ -13,9 +13,9 @@
 
 #include <string.h>
 
-/*******************/
-/*  U T I L I T Y  */
-/*******************/
+/*********************/
+/*   U T I L I T Y   */
+/*********************/
 
 static void copyMessageInto(MQTTClient_message *dest, MQTTClient_message *src) {
     if (src != NULL && dest != NULL) {
@@ -24,9 +24,9 @@ static void copyMessageInto(MQTTClient_message *dest, MQTTClient_message *src) {
     }
 }
 
-/*************************************************************/
-/*      I N T E R F A C E  I M P L E M E N T A T I O N       */
-/*************************************************************/
+/******************************************************/
+/*   I N T E R F A C E  I M P L E M E N T A T I O N   */
+/******************************************************/
 
 void EsMqttAsyncArgumentsInit(EsGlobalInfo *globalInfo) {
     ES_UNUSED(globalInfo);
@@ -52,14 +52,19 @@ MQTTProperties *EsCopyProperties(MQTTProperties *props) {
 }
 
 char *EsCopyString(char *str) {
+    char *heapCopy;
+
     if (str == NULL) {
         return NULL;
     }
 
-    return (char *) EsAllocateMemory(strlen(str) + 1);
+    heapCopy = (char *) EsAllocateMemory(strlen(str) + 1);
+    strcpy(heapCopy, str);
+    return heapCopy;
 }
 
 char *EsCopyTopicString(char *topicStr, I_32 len) {
+    char *heapCopy;
     I_32 actualLen;
 
     if (topicStr == NULL) {
@@ -67,8 +72,9 @@ char *EsCopyTopicString(char *topicStr, I_32 len) {
     }
 
     actualLen = (len == 0) ? (I_32) strlen(topicStr) : len;
-
-    return (char *) EsAllocateMemory(actualLen + 1);
+    heapCopy = (char *) EsAllocateMemory(actualLen + 1);
+    strncpy(heapCopy, topicStr, actualLen);
+    return heapCopy;
 }
 
 MQTTClient_message *EsCopyMessage(MQTTClient_message *msg) {

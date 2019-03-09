@@ -66,8 +66,8 @@ set(VASTPAHO_PRODUCT_SUBDIR "${VASTPAHO_PRODUCT_VERSION_MAJOR}.${VASTPAHO_PRODUC
 #------------------------------------------------------------------
 # Option Settings
 #------------------------------------------------------------------
-option(BUILD_TESTING "Build testsuite" OFF)
-option(BUILD_DOCUMENTATION "Build documentation" OFF)
+option(BUILD_TESTING "Build testsuite" ON)
+option(BUILD_DOCUMENTATION "Build documentation" ON)
 
 #------------------------------------------------------------------
 # Output Settings
@@ -125,14 +125,28 @@ elseif (WIN32)
 endif ()
 
 #------------------------------------------------------------------
+# C Source Variables
+#------------------------------------------------------------------
+set(ES_C_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src)
+set(ES_C_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/src)
+set(ES_C_THIRDPARTY_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty)
+set(ES_C_THIRDPARTY_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty)
+set(ES_C_INC_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include)
+set(ES_C_INC_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/include)
+set(ES_C_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib)
+set(ES_C_LIB_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/lib)
+set(ES_C_TEST_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/test)
+set(ES_C_TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/test)
+
+#------------------------------------------------------------------
 # 3rd Party Module: Plibsys
 #------------------------------------------------------------------
 include(ExternalProject)
 option(PLIBSYS_BUILD_DOC "Build plibsys documentation" OFF)
 option(PLIBSYS_TESTS "Build plibsys tests" OFF)
 set(PLIBSYS_PROJ_NAME plibsys)
-set(PLIBSYS_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty/plibsys)
-set(PLIBSYS_BIN_ROOT ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty/plibsys)
+set(PLIBSYS_SRC_ROOT ${ES_C_THIRDPARTY_SRC_DIR}/plibsys)
+set(PLIBSYS_BIN_ROOT ${ES_C_THIRDPARTY_BIN_DIR}/plibsys)
 #-- Raspbian Check and Fix
 if (NOT DEFINED ${CMAKE_C_COMPILER_ID} AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
     set(PLIBSYS_COMPILER_ID GNU)
@@ -172,8 +186,8 @@ set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${PLIBSYS_PROJ_NAME})
 # 3rd Party Module: MQTT-Paho
 #------------------------------------------------------------------
 set(MQTT_PAHO_PROJ_NAME mqtt-paho)
-set(MQTT_PAHO_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty/mqtt-paho-c)
-set(MQTT_PAHO_BIN_ROOT ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty/mqtt-paho-c)
+set(MQTT_PAHO_SRC_ROOT ${ES_C_THIRDPARTY_SRC_DIR}/mqtt-paho-c)
+set(MQTT_PAHO_BIN_ROOT ${ES_C_THIRDPARTY_BIN_DIR}/mqtt-paho-c)
 ExternalProject_Add(
         ${MQTT_PAHO_PROJ_NAME}
         GIT_REPOSITORY https://github.com/eclipse/paho.mqtt.c.git
@@ -193,12 +207,12 @@ set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
 #------------------------------------------------------------------
 # Module: VA Smalltalk Virtual Machine
 #------------------------------------------------------------------
-set(ES_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include/es
+set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es
         CACHE PATH "ES: Includes")
 include_directories(${ES_INCLUDES})
 find_library(ES_LIBRARY
         NAMES esvm40 esvm40.so
-        PATHS "${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib/es" ${CUSTOM_ES_LIBRARY}
+        PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ES_LIBRARY}
         NO_DEFAULT_PATH)
 message(STATUS "Found VA Smalltalk VM Library: ${ES_LIBRARY}")
 set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
@@ -207,30 +221,32 @@ set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
 # Common Build Instructions
 #------------------------------------------------------------------
 set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include
-        ${CMAKE_CURRENT_BINARY_DIR}/cSource/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src
-        ${CMAKE_CURRENT_BINARY_DIR}/cSource/src
+        ${ES_C_INC_SRC_DIR}
+        ${ES_C_INC_BIN_DIR}
+        ${ES_C_SRC_DIR}
+        ${ES_C_BIN_DIR}
         CACHE PATH "VAST PAHO: Headers")
 include_directories(${VAST_PAHO_INCLUDES})
 
 #-- Configure headers
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttVersionInfo.h.in
-        ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/EsMqttVersionInfo.h)
+        ${ES_C_SRC_DIR}/EsMqttVersionInfo.h.in
+        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
 
 set(VAST_PAHO_SOURCES
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncArguments.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncArguments.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncMessages.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttAsyncMessages.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttCallbacks.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttCallbacks.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttLibrary.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttLibrary.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttUserPrims.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/EsMqttUserPrims.c
-        ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/EsMqttVersionInfo.h)
+        ${ES_C_SRC_DIR}/EsMqttAsyncArguments.h
+        ${ES_C_SRC_DIR}/EsMqttAsyncArguments.c
+        ${ES_C_SRC_DIR}/EsMqttAsyncMessages.h
+        ${ES_C_SRC_DIR}/EsMqttAsyncMessages.c
+        ${ES_C_SRC_DIR}/EsMqttCallbacks.h
+        ${ES_C_SRC_DIR}/EsMqttCallbacks.c
+        ${ES_C_SRC_DIR}/EsMqttLibrary.h
+        ${ES_C_SRC_DIR}/EsMqttLibrary.c
+        ${ES_C_SRC_DIR}/EsMqttUserPrims.h
+        ${ES_C_SRC_DIR}/EsMqttUserPrims.c
+        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h
+        ${ES_C_SRC_DIR}/EsWorkTask.h
+        ${ES_C_SRC_DIR}/EsWorkTask.c)
 
 #------------------------------------------------------------------
 # OS-Dependent Build Instructions
@@ -239,16 +255,16 @@ set(VAST_PAHO_SOURCES
 if (WIN32 AND NOT CYGWIN)
     #-- Configure sources
     configure_file(
-            ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/os/windows/vastpaho.def.in
-            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.def)
+            ${ES_C_SRC_DIR}/os/windows/vastpaho.def.in
+            ${ES_C_BIN_DIR}/os/windows/vastpaho.def)
     configure_file(
-            ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src/os/windows/vastpaho.rc.in
-            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.rc)
+            ${ES_C_SRC_DIR}/os/windows/vastpaho.rc.in
+            ${ES_C_BIN_DIR}/os/windows/vastpaho.rc)
 
     #-- Add windows sources
     set(VAST_PAHO_SOURCES ${VAST_PAHO_SOURCES}
-            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.def
-            ${CMAKE_CURRENT_BINARY_DIR}/cSource/src/os/windows/vastpaho.rc)
+            ${ES_C_BIN_DIR}/os/windows/vastpaho.def
+            ${ES_C_BIN_DIR}/os/windows/vastpaho.rc)
 
     set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ws2_32)
 
@@ -289,7 +305,7 @@ else ()
 endif ()
 
 #------------------------------------------------------------------
-# Generate the helper library
+# Generate C Library
 #------------------------------------------------------------------
 add_library(${VAST_PAHO_LIBNAME} SHARED ${VAST_PAHO_SOURCES})
 add_dependencies(${VAST_PAHO_LIBNAME} ${VAST_PAHO_DEPS})
@@ -300,3 +316,19 @@ target_link_libraries(${VAST_PAHO_LIBNAME} PRIVATE ${VAST_PAHO_LIBS})
 if (UNIX OR CMAKE_COMPILER_IS_GNUCC)
     set_target_properties(${VAST_PAHO_LIBNAME} PROPERTIES PREFIX "")
 endif ()
+
+#------------------------------------------------------------------
+# UNIT TEST SUITES
+#------------------------------------------------------------------
+if(BUILD_TESTING)
+    enable_testing()
+    include_directories(${ES_C_TEST_SRC_DIR} ${ES_C_TEST_SRC_DIR}/esunit)
+
+    #-- Tests: EsWorkTask
+    add_executable(tests_esworktask ${ES_C_TEST_SRC_DIR}/TestEsWorkTask.c ${ES_C_SRC_DIR}/EsWorkTask.c)
+    add_dependencies(tests_esworktask ${PLIBSYS_PROJ_NAME})
+    target_link_libraries(tests_esworktask ${VAST_PAHO_LIBS})
+    add_test(NAME tests_esworktask COMMAND tests_esworktask)
+    set_property(TARGET tests_esworktask PROPERTY PROJECT_LABEL "Tests_EsWorkTask")
+
+endif()

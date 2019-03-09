@@ -18,9 +18,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-/*************************/
-/* P R O T O T Y P E S   */
-/*************************/
+/***************************/
+/*   P R O T O T Y P E S   */
+/***************************/
 
 /**
  * @brief MQTT Paho MQTTClient.h callback to capture trace info
@@ -102,9 +102,10 @@ static void *_CallbackTargets[NUM_MQTT_CALLBACKS] = {
         dummyCheckpointCallback
 };
 
-/*******************/
-/*  U T I L I T Y  */
-/*******************/
+/*********************/
+/*   U T I L I T Y   */
+/*********************/
+
 /**
  * @brief Get the callback function address (target) for callback type
  *
@@ -113,7 +114,9 @@ static void *_CallbackTargets[NUM_MQTT_CALLBACKS] = {
  * @return TRUE if success, FALSE otherwise
  */
 static BOOLEAN getCallbackTarget(enum MqttVastCallbackTypes cbType, void **target) {
-    if ((target != NULL) && EsIsValidCallbackType(cbType)) {
+    if (target == NULL) {
+        return FALSE;
+    } else if (EsIsValidCallbackType(cbType)) {
         *target = _CallbackTargets[cbType];
         return TRUE;
     } else {
@@ -122,45 +125,68 @@ static BOOLEAN getCallbackTarget(enum MqttVastCallbackTypes cbType, void **targe
     }
 }
 
-/********************************/
-/*      C A L L B A C K S       */
-/********************************/
+/*************************/
+/*   C A L L B A C K S   */
+/*************************/
+
 static void traceCallback(I_32 level, char *message) {
-    EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_TRACE, 2, level, message);
+    EsMqttAsyncMessage *msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_TRACE, 2, level, message);
+    if (msg != NULL) {
+        EsPostMessageToAsyncQueue(msg);
+    }
 }
 
 static void connectionLostCallback(void *context, char *cause) {
-    EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_CONNECTIONLOST, 2, context, cause);
+    EsMqttAsyncMessage *msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_CONNECTIONLOST, 2, context, cause);
+    if (msg != NULL) {
+        EsPostMessageToAsyncQueue(msg);
+    }
 }
 
 static void disconnectedCallback(void *context, MQTTProperties *properties, enum MQTTReasonCodes reasonCode) {
-    EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_DISCONNECTED, 3, context, properties, reasonCode);
+    EsMqttAsyncMessage *msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_DISCONNECTED, 3, context, context, properties,
+                                                reasonCode);
+    if (msg != NULL) {
+        EsPostMessageToAsyncQueue(msg);
+    }
 }
 
 static I_32 messageArrivedCallback(void *context, char *topicName, I_32 topicLen, MQTTClient_message *message) {
-    if (EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_MESSAGEARRIVED, 4, context, topicName, topicLen, message)) {
-        return 1;
-    } else {
-        return 0;
+    EsMqttAsyncMessage *msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_MESSAGEARRIVED, 4, context, topicName, topicLen,
+                                                message);
+    if (msg != NULL) {
+        if (EsPostMessageToAsyncQueue(msg)) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 }
 
 static void deliveryCompleteCallback(void *context, MQTTClient_deliveryToken token) {
-    EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_DELIVERYCOMPLETE, 2, context, token);
+    EsMqttAsyncMessage *msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_DELIVERYCOMPLETE, 2, context, token);
+    if (msg != NULL) {
+        EsPostMessageToAsyncQueue(msg);
+    }
 }
 
 static void publishedCallback(void *context, I_32 dt, I_32 packet_type, MQTTProperties *properties,
                               enum MQTTReasonCodes reasonCode) {
-    EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_PUBLISHED, 5, context, dt, packet_type, properties, reasonCode);
+    EsMqttAsyncMessage *msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_PUBLISHED, 5, context, dt, packet_type,
+                                                properties, reasonCode);
+    if (msg != NULL) {
+        EsPostMessageToAsyncQueue(msg);
+    }
 }
 
 static void dummyCheckpointCallback(I_32 id) {
     ES_UNUSED(id);
 }
 
-/*************************************************************/
-/*      I N T E R F A C E  I M P L E M E N T A T I O N       */
-/*************************************************************/
+/******************************************************/
+/*   I N T E R F A C E  I M P L E M E N T A T I O N   */
+/******************************************************/
+
 void EsMqttCallbacksInit(EsGlobalInfo *globalInfo) {
     ES_UNUSED(globalInfo);
 }

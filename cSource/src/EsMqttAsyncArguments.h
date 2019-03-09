@@ -25,9 +25,9 @@
 
 #include "MQTTClient.h"
 
-/******************************************/
-/*      S E T U P / S H U T D O W N       */
-/******************************************/
+/***********************************/
+/*   S E T U P / S H U T D O W N   */
+/***********************************/
 
 /**
  * @brief Initialize the library modules, if necessary
@@ -41,9 +41,9 @@ void EsMqttAsyncArgumentsInit(EsGlobalInfo *globalInfo);
  */
 void EsMqttAsyncArgumentsShutdown();
 
-/***********************************/
-/*  M Q T T  D A T A  C O P I E S  */
-/***********************************/
+/*************************************/
+/*   M Q T T  D A T A  C O P I E S   */
+/*************************************/
 
 /**
  * @brief Answer a heap-allocated copy of the properties

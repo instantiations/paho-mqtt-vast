@@ -33,9 +33,9 @@
 #ifndef ES_MQTT_CALLBACKS_H
 #define ES_MQTT_CALLBACKS_H
 
-/************************/
-/*      E N U M S       */
-/************************/
+/*****************/
+/*   E N U M S   */
+/*****************/
 
 /**
  * @enum MqttVastCallbackTypes
@@ -56,9 +56,9 @@ enum MqttVastCallbackTypes {
     MQTTVAST_CALLBACK_TYPE_CHECKPOINT
 };
 
-/******************************************/
-/*      S E T U P / S H U T D O W N       */
-/******************************************/
+/***********************************/
+/*   S E T U P / S H U T D O W N   */
+/***********************************/
 
 /**
  * @brief Initialize the Callback module
@@ -71,9 +71,9 @@ void EsMqttCallbacksInit(EsGlobalInfo *globalInfo);
  */
 void EsMqttCallbacksShutdown();
 
-/********************************/
-/*      C A L L B A C K S       */
-/********************************/
+/*************************/
+/*   C A L L B A C K S   */
+/*************************/
 
 /**
  * Test if the supplied callback type value is valid

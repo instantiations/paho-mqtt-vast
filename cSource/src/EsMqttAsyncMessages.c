@@ -10,80 +10,70 @@
 #include "plibsys.h"
 #include "MQTTClient.h"
 
+#include "esuser.h"
+
 #include "EsMqttAsyncMessages.h"
 #include "EsMqttAsyncArguments.h"
+#include "EsWorkTask.h"
 
 #include <stdarg.h>
 
-/*************************/
-/* P R O T O T Y P E S   */
-/*************************/
+/***************************/
+/*   P R O T O T Y P E S   */
+/***************************/
+
 /**
  * Post Async Message for MQTTVAST_CALLBACK_TYPE_TRACE
- * @param receiver EsObject class
- * @param selector EsObject symbol selector
- * @param argsList (I_32 level, char *message)
+ * @param message to post to VAST async queue
  * @return TRUE if async msg posted, FALSE otherwise
  */
-static BOOLEAN traceHandler(EsObject receiver, EsObject selector, va_list argsList);
+static BOOLEAN traceHandler(EsMqttAsyncMessage *message);
 
 /**
  * Post Async Message for MQTTVAST_CALLBACK_TYPE_CONNECTIONLOST
- * @param receiver EsObject class
- * @param selector EsObject symbol selector
- * @param argsList (void *context, char *cause)
+ * @param message to post to VAST async queue
  * @return TRUE if async msg posted, FALSE otherwise
  */
-static BOOLEAN connectionLostHandler(EsObject receiver, EsObject selector, va_list argsList);
+static BOOLEAN connectionLostHandler(EsMqttAsyncMessage *message);
 
 /**
  * Post Async Message for MQTTVAST_CALLBACK_TYPE_DISCONNECTED
- * @param receiver EsObject class
- * @param selector EsObject symbol selector
- * @param argsList (void *context, MQTTProperties *properties, enum MQTTReasonCodes reasonCode)
+ * @param message to post to VAST async queue
  * @return TRUE if async msg posted, FALSE otherwise
  */
-static BOOLEAN disconnectedHandler(EsObject receiver, EsObject selector, va_list argsList);
+static BOOLEAN disconnectedHandler(EsMqttAsyncMessage *message);
 
 /**
  * Post Async Message for MQTTVAST_CALLBACK_TYPE_MESSAGEARRIVED
- * @param receiver EsObject class
- * @param selector EsObject symbol selector
- * @param argsList (void *context, char *topicName, I_32 topicLen, MQTTClient_message *message)
+ * @param message to post to VAST async queue
  * @return TRUE if async msg posted, FALSE otherwise
  */
-static BOOLEAN messageArrivedHandler(EsObject receiver, EsObject selector, va_list argsList);
+static BOOLEAN messageArrivedHandler(EsMqttAsyncMessage *message);
 
 /**
  * Post Async Message for MQTTVAST_CALLBACK_TYPE_DELIVERYCOMPLETE
- * @param receiver EsObject class
- * @param selector EsObject symbol selector
- * @param argsList (void *context, MQTTClient_deliveryToken token)
+ * @param message to post to VAST async queue
  * @return TRUE if async msg posted, FALSE otherwise
  */
-static BOOLEAN deliveryCompleteHandler(EsObject receiver, EsObject selector, va_list argsList);
+static BOOLEAN deliveryCompleteHandler(EsMqttAsyncMessage *message);
 
 /**
  * Post Async Message for MQTTVAST_CALLBACK_TYPE_PUBLISHED
- * @param receiver EsObject class
- * @param selector EsObject symbol selector
- * @param argsList (void *context, I_32 dt, I_32 packet_type, MQTTProperties *properties, enum MQTTReasonCodes)
+ * @param message to post to VAST async queue
  * @return TRUE if async msg posted, FALSE otherwise
  */
-static BOOLEAN publishedHandler(EsObject receiver, EsObject selector, va_list argsList);
+static BOOLEAN publishedHandler(EsMqttAsyncMessage *message);
 
 /**
  * Post Async Message for MQTTVAST_CALLBACK_TYPE_CHECKPOINT
- * @param receiver EsObject class
- * @param selector EsObject symbol selector
- * @param argsList (I_32 id)
+ * @param message to post to VAST async queue
  * @return TRUE if async msg posted, FALSE otherwise
  */
-static BOOLEAN checkpointHandler(EsObject receiver, EsObject selector, va_list argsList);
+static BOOLEAN checkpointHandler(EsMqttAsyncMessage *message);
 
 
 /*******************************************/
-/*  M O D U L E  P R I V A T E  V A R S    */
+/*   M O D U L E  P R I V A T E  V A R S   */
 /*******************************************/
 
 /**
@@ -122,9 +112,8 @@ static PRWLock *_AsyncMessageTargetsLock = NULL;
 
 /**
  * Handler functions that post async messages to VA Smalltalk's async queue
- * with the receiver>>selector target and the arguments
  */
-typedef BOOLEAN AsyncMessageHandlerFunc(EsObject receiver, EsObject selector, va_list argsList);
+typedef BOOLEAN (*AsyncMessageHandlerFunc)(EsMqttAsyncMessage *message);
 
 /**
  * @brief Array of AsyncMessageHandlerFunc handlers
@@ -132,7 +121,7 @@ typedef BOOLEAN AsyncMessageHandlerFunc(EsObject receiver, EsObject selector, va
  * The index is the MqttVastCallbackTypes and value
  * is the handler function associated with the cbType
  */
-static AsyncMessageHandlerFunc *_AsyncMessageHandlers[NUM_MQTT_CALLBACKS] = {
+static AsyncMessageHandlerFunc _AsyncMessageHandlers[NUM_MQTT_CALLBACKS] = {
         traceHandler,
         connectionLostHandler,
         disconnectedHandler,
@@ -142,9 +131,32 @@ static AsyncMessageHandlerFunc *_AsyncMessageHandlers[NUM_MQTT_CALLBACKS] = {
         checkpointHandler
 };
 
-/*******************/
-/*  U T I L I T Y  */
-/*******************/
+/**********************************/
+/*   A S Y N C  M E S S A G E S   */
+/**********************************/
+
+typedef union _EsMqttAsynMessageArg EsMqttAsyncMessageArg;
+union _EsMqttAsynMessageArg {
+    void *ptr;
+    char *str;
+    MQTTClient_message *msg;
+    MQTTProperties *props;
+    I_32 i;
+    enum MQTTReasonCodes reasonCode;
+    MQTTClient_deliveryToken token;
+};
+
+struct _EsMqttAsyncMessage {
+    enum MqttVastCallbackTypes cbType;
+    EsObject receiver;
+    EsObject selector;
+    EsMqttAsyncMessageArg args[];
+};
+
+/*********************/
+/*   U T I L I T Y   */
+/*********************/
+
 /**
  * @brief Split u64 into high/low i32
  *
@@ -233,7 +245,7 @@ static BOOLEAN setAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject
  * @param handler[output] set to NULL if fails
  * @return TRUE if success, FALSE otherwise
  */
-static BOOLEAN getAsyncMessageHandler(enum MqttVastCallbackTypes cbType, AsyncMessageHandlerFunc **handlerPtr) {
+static BOOLEAN getAsyncMessageHandler(enum MqttVastCallbackTypes cbType, AsyncMessageHandlerFunc *handlerPtr) {
     if (handlerPtr == NULL) {
         return FALSE;
     } else if (EsIsValidCallbackType(cbType)) {
@@ -245,62 +257,62 @@ static BOOLEAN getAsyncMessageHandler(enum MqttVastCallbackTypes cbType, AsyncMe
     }
 }
 
-/**************************************************/
-/*      A S Y N C  Q U E U E  H A N D L E R S     */
-/**************************************************/
-static BOOLEAN traceHandler(EsObject receiver, EsObject selector, va_list argsList) {
-    I_32 level = va_arg(argsList, I_32);
-    char *message = va_arg(argsList, char*);
+/*********************************************/
+/*   A S Y N C  Q U E U E  H A N D L E R S   */
+/*********************************************/
 
-    char *messageCopy;
-    I_32 messageHigh, messageLow;
+static BOOLEAN traceHandler(EsMqttAsyncMessage *message) {
+    I_32 level;
+    I_32 traceStrHigh, traceStrLow;
+    char *traceStr;
+    char *traceStrCopy;
 
-    messageCopy = EsCopyString(message);
-    strcpy(messageCopy, message);
-    hiLowFromPointer(messageCopy, &messageHigh, &messageLow);
+    level = message->args[0].i;
+    traceStr = message->args[1].str;
+
+    traceStrCopy = EsCopyString(traceStr);
+    hiLowFromPointer(traceStrCopy, &traceStrHigh, &traceStrLow);
     return EsPostAsyncMessage(
             &_DummyVMContext,
-            receiver,
-            selector,
+            message->receiver,
+            message->selector,
             3,
             EsI32ToSmallInteger(level),
-            EsI32ToSmallInteger(messageHigh),
-            EsI32ToSmallInteger(messageLow));
+            EsI32ToSmallInteger(traceStrHigh),
+            EsI32ToSmallInteger(traceStrLow));
 }
 
-static BOOLEAN connectionLostHandler(EsObject receiver, EsObject selector, va_list argsList) {
-    void *context = va_arg(argsList, void*);
-    char *cause = va_arg(argsList, char*);
+static BOOLEAN connectionLostHandler(EsMqttAsyncMessage *message) {
+    void *context = message->args[0].ptr;
+    char *cause = message->args[1].str;
 
-    char *causeCopy;
+    char *causeCopy = EsCopyString(cause);
     I_32 causeHigh, causeLow;
 
-    causeCopy = EsCopyString(cause);
     hiLowFromPointer(causeCopy, &causeHigh, &causeLow);
     return EsPostAsyncMessage(
             &_DummyVMContext,
-            receiver,
-            selector,
+            message->receiver,
+            message->selector,
             3,
             EsI32ToSmallInteger(context),
             EsI32ToSmallInteger(causeHigh),
             EsI32ToSmallInteger(causeLow));
 }
 
-static BOOLEAN disconnectedHandler(EsObject receiver, EsObject selector, va_list argsList) {
-    void *context = va_arg(argsList, void*);
-    MQTTProperties *properties = va_arg(argsList, MQTTProperties*);
-    enum MQTTReasonCodes reasonCode = va_arg(argsList, enum MQTTReasonCodes);
+static BOOLEAN disconnectedHandler(EsMqttAsyncMessage *message) {
+    void *context = message->args[0].ptr;
+    MQTTProperties *properties = message->args[1].props;
+    enum MQTTReasonCodes reasonCode = message->args[2].reasonCode;
 
-    MQTTProperties *propertiesCopy;
+    MQTTProperties *propertiesCopy = EsCopyProperties(properties);
     I_32 propertiesHigh, propertiesLow;
 
-    propertiesCopy = EsCopyProperties(properties);
     hiLowFromPointer(propertiesCopy, &propertiesHigh, &propertiesLow);
     return EsPostAsyncMessage(
             &_DummyVMContext,
-            receiver,
-            selector,
+            message->receiver,
+            message->selector,
             4,
             EsI32ToSmallInteger(context),
             EsI32ToSmallInteger(propertiesHigh),
@@ -308,25 +320,23 @@ static BOOLEAN disconnectedHandler(EsObject receiver, EsObject selector, va_list
             EsI32ToSmallInteger(reasonCode));
 }
 
-static BOOLEAN messageArrivedHandler(EsObject receiver, EsObject selector, va_list argsList) {
-    void *context = va_arg(argsList, void*);
-    char *topicName = va_arg(argsList, char*);
-    I_32 topicLen = va_arg(argsList, I_32);
-    MQTTClient_message *message = va_arg(argsList, MQTTClient_message*);
+static BOOLEAN messageArrivedHandler(EsMqttAsyncMessage *message) {
+    void *context = message->args[0].ptr;
+    char *topicName = message->args[1].str;
+    I_32 topicLen = message->args[2].i;
+    MQTTClient_message *clientMessage = message->args[3].msg;
 
-    MQTTClient_message *messageCopy;
-    char *topicNameCopy;
+    MQTTClient_message *clientMessageCopy = EsCopyMessage(clientMessage);
+    char *topicNameCopy = EsCopyTopicString(topicName, topicLen);
     I_32 topicNameHigh, topicNameLow;
     I_32 messageHigh, messageLow;
 
-    topicNameCopy = EsCopyTopicString(topicName, topicLen);
-    messageCopy = EsCopyMessage(message);
     hiLowFromPointer(topicNameCopy, &topicNameHigh, &topicNameLow);
-    hiLowFromPointer(messageCopy, &messageHigh, &messageLow);
+    hiLowFromPointer(clientMessageCopy, &messageHigh, &messageLow);
     return EsPostAsyncMessage(
             &_DummyVMContext,
-            receiver,
-            selector,
+            message->receiver,
+            message->selector,
             6,
             EsI32ToSmallInteger(context),
             EsI32ToSmallInteger(topicNameHigh),
@@ -336,35 +346,34 @@ static BOOLEAN messageArrivedHandler(EsObject receiver, EsObject selector, va_li
             EsI32ToSmallInteger(messageLow));
 }
 
-static BOOLEAN deliveryCompleteHandler(EsObject receiver, EsObject selector, va_list argsList) {
-    void *context = va_arg(argsList, void*);
-    MQTTClient_deliveryToken token = va_arg(argsList, MQTTClient_deliveryToken);
+static BOOLEAN deliveryCompleteHandler(EsMqttAsyncMessage *message) {
+    void *context = message->args[0].ptr;
+    MQTTClient_deliveryToken token = message->args[1].token;
 
     return EsPostAsyncMessage(
             &_DummyVMContext,
-            receiver,
-            selector,
+            message->receiver,
+            message->selector,
             2,
             EsI32ToSmallInteger(context),
             EsI32ToSmallInteger(token));
 }
 
-static BOOLEAN publishedHandler(EsObject receiver, EsObject selector, va_list argsList) {
-    void *context = va_arg(argsList, void*);
-    I_32 dt = va_arg(argsList, I_32);
-    I_32 packet_type = va_arg(argsList, I_32);
-    MQTTProperties *properties = va_arg(argsList, MQTTProperties*);
-    enum MQTTReasonCodes reasonCode = va_arg(argsList, enum MQTTReasonCodes);
+static BOOLEAN publishedHandler(EsMqttAsyncMessage *message) {
+    void *context = message->args[0].ptr;
+    I_32 dt = message->args[1].i;
+    I_32 packet_type = message->args[2].i;
+    MQTTProperties *properties = message->args[3].props;
+    enum MQTTReasonCodes reasonCode = message->args[4].reasonCode;
 
-    MQTTProperties *propertiesCopy;
+    MQTTProperties *propertiesCopy = EsCopyProperties(properties);
     I_32 propertiesHigh, propertiesLow;
 
-    propertiesCopy = EsCopyProperties(properties);
     hiLowFromPointer(propertiesCopy, &propertiesHigh, &propertiesLow);
     return EsPostAsyncMessage(
             &_DummyVMContext,
-            receiver,
-            selector,
+            message->receiver,
+            message->selector,
             6,
             EsI32ToSmallInteger(context),
             EsI32ToSmallInteger(dt),
@@ -374,20 +383,48 @@ static BOOLEAN publishedHandler(EsObject receiver, EsObject selector, va_list ar
             EsI32ToSmallInteger(reasonCode));
 }
 
-static BOOLEAN checkpointHandler(EsObject receiver, EsObject selector, va_list argsList) {
-    I_32 id = va_arg(argsList, I_32);
+static BOOLEAN checkpointHandler(EsMqttAsyncMessage *message) {
+    I_32 id = message->args[0].i;
 
     return EsPostAsyncMessage(
             &_DummyVMContext,
-            receiver,
-            selector,
+            message->receiver,
+            message->selector,
             1,
             EsI32ToSmallInteger(id));
 }
 
-/*************************************************************/
-/*      I N T E R F A C E  I M P L E M E N T A T I O N       */
-/*************************************************************/
+static void submitToAsyncQueue(EsWorkTask *task) {
+    EsObject receiver, selector;
+    AsyncMessageHandlerFunc handler;
+    EsMqttAsyncMessage *msg;
+
+    msg = (EsMqttAsyncMessage *) EsGetWorkTaskData(task);
+    if (!msg) {
+        return;
+    }
+
+    /* Get valid receiver>>selector */
+    if (!getAsyncMessageTarget(msg->cbType, &receiver, &selector)) {
+        EsFreeAsyncMessage(msg);
+        EsFreeWorkTask(task);
+    }
+
+    msg->receiver = receiver;
+    msg->selector = selector;
+    /* Get valid handler which will post msg */
+    if (!getAsyncMessageHandler(msg->cbType, &handler)) {
+        return;
+    }
+
+    handler(msg);
+
+}
+
+/******************************************************/
+/*   I N T E R F A C E  I M P L E M E N T A T I O N   */
+/******************************************************/
+
 void EsMqttAsyncMessagesInit(EsGlobalInfo *globalInfo) {
     _DummyVMContext.globalInfo = globalInfo;
     _AsyncMessageTargetsLock = p_rwlock_new();
@@ -395,6 +432,92 @@ void EsMqttAsyncMessagesInit(EsGlobalInfo *globalInfo) {
 
 void EsMqttAsyncMessagesShutdown() {
     _DummyVMContext.globalInfo = NULL;
+}
+
+EsMqttAsyncMessage *EsNewAsyncMessage(enum MqttVastCallbackTypes cbType, U_32 argCount, ...) {
+    EsMqttAsyncMessage *msg;
+    va_list argsList;
+
+    msg = (EsMqttAsyncMessage *) EsAllocateMemory(
+            sizeof(EsMqttAsyncMessage) + sizeof(EsMqttAsyncMessageArg) * argCount);
+    if (!msg) {
+        return (EsMqttAsyncMessage *) NULL;
+    }
+
+    msg->cbType = cbType;
+    msg->receiver = EsNil;
+    msg->selector = EsNil;
+    va_start(argsList, argCount);
+    switch (cbType) {
+        case MQTTVAST_CALLBACK_TYPE_TRACE:
+            if (argCount != 2) {
+                return NULL;
+            }
+            msg->args[0].i = va_arg(argsList, I_32);
+            msg->args[1].str = EsCopyString(va_arg(argsList, char*));
+            break;
+        case MQTTVAST_CALLBACK_TYPE_CONNECTIONLOST:
+            if (argCount != 2) {
+                return NULL;
+            }
+            msg->args[0].i = va_arg(argsList, I_32);
+            msg->args[1].str = EsCopyString(va_arg(argsList, char*));
+            break;
+        case MQTTVAST_CALLBACK_TYPE_DISCONNECTED:
+            if (argCount != 3) {
+                return NULL;
+            }
+            msg->args[0].ptr = va_arg(argsList, void*);
+            msg->args[1].props = EsCopyProperties(va_arg(argsList, MQTTProperties*));
+            msg->args[2].reasonCode = va_arg(argsList, enum MQTTReasonCodes);
+            break;
+        case MQTTVAST_CALLBACK_TYPE_MESSAGEARRIVED:
+            if (argCount != 4) {
+                return NULL;
+            }
+            msg->args[0].ptr = va_arg(argsList, void*);
+            msg->args[1].str = va_arg(argsList, char*);
+            msg->args[2].i = va_arg(argsList, I_32);
+            msg->args[3].msg = EsCopyMessage(va_arg(argsList, MQTTClient_message*));
+            break;
+        case MQTTVAST_CALLBACK_TYPE_DELIVERYCOMPLETE:
+            if (argCount != 2) {
+                return NULL;
+            }
+            msg->args[0].ptr = va_arg(argsList, void*);
+            msg->args[1].token = va_arg(argsList, MQTTClient_deliveryToken);
+            break;
+        case MQTTVAST_CALLBACK_TYPE_PUBLISHED:
+            if (argCount != 5) {
+                return NULL;
+            }
+            msg->args[0].ptr = va_arg(argsList, void*);
+            msg->args[1].i = va_arg(argsList, I_32);
+            msg->args[2].i = va_arg(argsList, I_32);
+            msg->args[3].props = EsCopyProperties(va_arg(argsList, MQTTProperties*));
+            msg->args[4].reasonCode = va_arg(argsList, enum MQTTReasonCodes);
+            break;
+        case MQTTVAST_CALLBACK_TYPE_CHECKPOINT:
+            if (argCount != 1) {
+                return NULL;
+            }
+            msg->args[0].i = va_arg(argsList, I_32);
+            break;
+        default:
+            break;
+    }
+    va_end(argsList);
+
+    return msg;
+}
+
+void EsFreeAsyncMessage(EsMqttAsyncMessage *message) {
+    if (message) {
+        if (message->args) {
+            EsFreeMemory(message->args);
+        }
+        EsFreeMemory(message);
+    }
 }
 
 BOOLEAN EsGetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector) {
@@ -405,25 +528,15 @@ BOOLEAN EsSetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject rece
     return setAsyncMessageTarget(cbType, receiver, selector);
 }
 
-BOOLEAN EsPostMessageToAsyncQueue(enum MqttVastCallbackTypes cbType, U_32 argCount, ...) {
-    EsObject receiver, selector;
-    AsyncMessageHandlerFunc *handler;
-    BOOLEAN success;
-    va_list argsList;
 
-    /* Get valid receiver>>selector */
-    if (!getAsyncMessageTarget(cbType, &receiver, &selector)) {
+BOOLEAN EsPostMessageToAsyncQueue(EsMqttAsyncMessage *message) {
+    EsWorkTask *task;
+
+    task = EsNewWorkTask(submitToAsyncQueue, message);
+    if (!task) {
         return FALSE;
     }
 
-    /* Get valid handler which will post msg */
-    if (!getAsyncMessageHandler(cbType, &handler)) {
-        return FALSE;
-    }
-
-    va_start(argsList, argCount);
-    success = handler(receiver, selector, argsList);
-    va_end(argsList);
-
-    return success;
+    EsRunWorkTask(task);
+    return TRUE;
 }

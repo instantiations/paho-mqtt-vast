@@ -16,7 +16,7 @@
 #include "EsMqttAsyncArguments.h"
 
 /*******************************************/
-/*  M O D U L E  P R I V A T E  V A R S    */
+/*   M O D U L E  P R I V A T E  V A R S   */
 /*******************************************/
 
 /**
@@ -24,9 +24,9 @@
  */
 static volatile I_32 _LibraryState = ESMQTT_LIBRARY_UNINIT;
 
-/*************************************************************/
-/*      I N T E R F A C E  I M P L E M E N T A T I O N       */
-/*************************************************************/
+/******************************************************/
+/*   I N T E R F A C E  I M P L E M E N T A T I O N   */
+/******************************************************/
 
 void EsMqttLibraryInit(EsGlobalInfo *globalInfo) {
     if (p_atomic_int_compare_and_exchange(&_LibraryState, ESMQTT_LIBRARY_UNINIT, ESMQTT_LIBRARY_INIT)) {
@@ -48,6 +48,6 @@ void EsMqttLibraryShutdown() {
     }
 }
 
-enum EsMqttLibraryState EsMqttGetLibraryState() {
+I_32 EsMqttGetLibraryState() {
     return _LibraryState;
 }

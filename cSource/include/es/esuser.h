@@ -93,6 +93,8 @@ BOOLEAN VMCALL name (EsVMContext EsPrimVMContext, U_32 EsPrimArgumentCount, U_32
 /******************/
 extern void *VMCALL EsAllocateMemory(U_SIZE byteAmount);
 
+extern void VMCALL EsFreeMemory(void * memoryPointer);
+
 extern BOOLEAN VMCALL EsPostAsyncMessage(EsVMContext, EsObject, EsObject, U_32, ...);
 
 extern U_32 VMCALL EsMakeUnsignedInteger(U_32, EsObject *, EsVMContext);

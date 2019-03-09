@@ -16,9 +16,9 @@
 #include "EsMqttAsyncMessages.h"
 #include "EsMqttVersionInfo.h"
 
-/*************************************************************/
-/*      I N T E R F A C E  I M P L E M E N T A T I O N       */
-/*************************************************************/
+/******************************************************/
+/*   I N T E R F A C E  I M P L E M E N T A T I O N   */
+/******************************************************/
 
 void EsMqttUserPrimsInit(EsGlobalInfo *globalInfo) {
     ES_UNUSED(globalInfo);
@@ -63,6 +63,7 @@ EsUserPrimitive(MqttVastRegisterCallback) {
 EsUserPrimitive(MqttVastCheckpoint) {
     I_32 id;
     BOOLEAN rc;
+    EsMqttAsyncMessage *msg;
 
     EsMqttLibraryInit(EsPrimVMContext->globalInfo);
 
@@ -78,7 +79,8 @@ EsUserPrimitive(MqttVastCheckpoint) {
     }
 
     id = EsSmallIntegerToI32(EsPrimArgument(1));
-    rc = EsPostMessageToAsyncQueue(MQTTVAST_CALLBACK_TYPE_CHECKPOINT, 1, id);
+    msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_CHECKPOINT, 1, id);
+    rc = EsPostMessageToAsyncQueue(msg);
 
     EsPrimSucceedBoolean(rc);
 }

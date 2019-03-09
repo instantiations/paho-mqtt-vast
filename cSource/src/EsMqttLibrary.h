@@ -8,28 +8,31 @@
  *  @author Seth Berman
  *
  *  Library setup and teardown which will delegate to the various modules
- *  to perform their setup and teardown procedures that require runtime
- *  information.
+ *  to perform their runtime setup and teardown procedures.
  *******************************************************************************/
 #ifndef ES_MQTT_LIBRARY_H
 #define ES_MQTT_LIBRARY_H
 
 #include "esuser.h"
 
+/*************************/
+/*   C O N S T A N T S   */
+/*************************/
+
 /**
- * @enum EsMqttLibraryState
  * @brief Library States
  *
+ * The module state lifecyle is
+ * UNITIT -> INIT -> SHUTDOWN
  */
-enum EsMqttLibraryState {
-    ESMQTT_LIBRARY_UNINIT = 0,
-    ESMQTT_LIBRARY_INIT,
-    ESMQTT_LIBRARY_SHUTDOWN
-};
+static const I_32 ESMQTT_LIBRARY_UNINIT = 0;
+static const I_32 ESMQTT_LIBRARY_INIT = 1;
+static const I_32 ESMQTT_LIBRARY_SHUTDOWN = 2;
 
-/******************************************/
-/*      S E T U P / S H U T D O W N       */
-/******************************************/
+
+/***********************************/
+/*   S E T U P / S H U T D O W N   */
+/***********************************/
 
 /**
  * @brief Initialize the library modules, if necessary
@@ -47,8 +50,9 @@ void EsMqttLibraryShutdown();
 
 /**
  * @brief Answer the current state of the library
- * @return EsMqttLibraryState
+ * @see Library State Constants above
+ * @return Library State
  */
-enum EsMqttLibraryState EsMqttGetLibraryState();
+I_32 EsMqttGetLibraryState();
 
 #endif //ES_MQTT_LIBRARY_H
