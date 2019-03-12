@@ -38,7 +38,7 @@
 /*****************/
 
 /**
- * @enum MqttVastCallbackTypes
+ * @enum EsMqttVastCallbackTypes
  * @brief MQTT Callback types from MQClient.h
  * @note This is mirrored in the Smalltalk image
  * via pool dictionary and any changes here should
@@ -46,14 +46,14 @@
  */
 #define MIN_MQTT_CALLBACKS          0
 #define NUM_MQTT_CALLBACKS          7
-enum MqttVastCallbackTypes {
-    MQTTVAST_CALLBACK_TYPE_TRACE = MIN_MQTT_CALLBACKS,
-    MQTTVAST_CALLBACK_TYPE_CONNECTIONLOST,
-    MQTTVAST_CALLBACK_TYPE_DISCONNECTED,
-    MQTTVAST_CALLBACK_TYPE_MESSAGEARRIVED,
-    MQTTVAST_CALLBACK_TYPE_DELIVERYCOMPLETE,
-    MQTTVAST_CALLBACK_TYPE_PUBLISHED,
-    MQTTVAST_CALLBACK_TYPE_CHECKPOINT
+enum EsMqttVastCallbackTypes {
+    ESMQTT_CB_TYPE_TRACE = MIN_MQTT_CALLBACKS,
+    ESMQTT_CB_TYPE_CONNECTIONLOST,
+    ESMQTT_CB_TYPE_DISCONNECTED,
+    ESMQTT_CB_TYPE_MESSAGEARRIVED,
+    ESMQTT_CB_TYPE_DELIVERYCOMPLETE,
+    ESMQTT_CB_TYPE_PUBLISHED,
+    ESMQTT_CB_TYPE_CHECKPOINT
 };
 
 /***********************************/
@@ -77,30 +77,30 @@ void EsMqttCallbacksShutdown();
 
 /**
  * Test if the supplied callback type value is valid
- * @param cbType
+ * @param cbType EsMqttVastCallbackTypes
  * @return TRUE if valid, FALSE otherwise
  */
-ES_STATIC_INLINE BOOLEAN EsIsValidCallbackType(enum MqttVastCallbackTypes cbType) {
+ES_STATIC_INLINE BOOLEAN EsIsValidCallbackType(enum EsMqttVastCallbackTypes cbType) {
     return (cbType >= MIN_MQTT_CALLBACKS && cbType < NUM_MQTT_CALLBACKS) ? TRUE : FALSE;
 }
 
 /**
  * @brief Answers callback address
- * @param cbType MqttVastCallbackTypes
+ * @param cbType EsMqttVastCallbackTypes
  * @param target[out] contains callback address or NULL
  * @return TRUE if successful get, FALSE otherwise
  */
-BOOLEAN EsGetCallbackTarget(enum MqttVastCallbackTypes cbType, void **target);
+BOOLEAN EsGetCallbackTarget(enum EsMqttVastCallbackTypes cbType, void **target);
 
 /**
  * @brief Register the receiver>>selector as async msg target for callback
- * @param cbType MqttVastCallbackTypes
+ * @param cbType EsMqttVastCallbackTypes
  * @param receiver EsObject smalltalk class
  * @param selector EsObject smalltalk symbol
  * @return address to callback function or NULL if none
  * @note Thread-safe.
  */
-void *EsRegisterCallback(enum MqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
+void *EsRegisterCallback(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
 
 
 #endif //ES_MQTT_CALLBACKS_H

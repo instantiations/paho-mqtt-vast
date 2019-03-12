@@ -22,7 +22,7 @@
 /**
  * @brief Boolean to check if the module is initialized
  */
-static volatile I_32 _LibraryState = ESMQTT_LIBRARY_UNINIT;
+static volatile I_32 _LibraryState = 0;
 
 /******************************************************/
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */

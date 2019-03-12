@@ -51,7 +51,7 @@ EsUserPrimitive(MqttVastRegisterCallback) {
     cbSelector = EsPrimArgument(3);
 
     funcAddr = EsRegisterCallback(cbType, cbReceiver, cbSelector);
-    if (funcAddr != NULL) {
+    if (ES_LIKELY(funcAddr != NULL)) {
         EsMakePointerInteger((U_PTR) funcAddr, &cbAddress, EsPrimVMContext);
     } else {
         cbAddress = EsNil;
@@ -79,7 +79,7 @@ EsUserPrimitive(MqttVastCheckpoint) {
     }
 
     id = EsSmallIntegerToI32(EsPrimArgument(1));
-    msg = EsNewAsyncMessage(MQTTVAST_CALLBACK_TYPE_CHECKPOINT, 1, id);
+    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_CHECKPOINT, 1, id);
     rc = EsPostMessageToAsyncQueue(msg);
 
     EsPrimSucceedBoolean(rc);

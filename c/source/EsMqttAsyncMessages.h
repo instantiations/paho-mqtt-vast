@@ -55,6 +55,10 @@
 
 #include "EsMqttCallbacks.h"
 
+/**************************/
+/*   D A T A  T Y P E S   */
+/**************************/
+
 /**
  * @brief Opaque async message
  */
@@ -86,7 +90,7 @@ void EsMqttAsyncMessagesShutdown();
  * @param ... msg args to post
  * @return EsMqttAsyncMessage* or NULL if
  */
-EsMqttAsyncMessage *EsNewAsyncMessage(enum MqttVastCallbackTypes cbType, U_32 argCount, ...);
+EsMqttAsyncMessage *EsNewAsyncMessage(enum EsMqttVastCallbackTypes cbType, U_32 argCount, ...);
 
 /**
  * @brief Free the memory associated with the message
@@ -105,7 +109,7 @@ void EsFreeAsyncMessage(EsMqttAsyncMessage *message);
  * @param selector[out] async msg target symbol selector
  * @return TRUE if successful get, FALSE otherwise
  */
-BOOLEAN EsGetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector);
+BOOLEAN EsGetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector);
 
 /**
  * @brief Set the Smalltalk receiver>>selector target for callback
@@ -114,7 +118,7 @@ BOOLEAN EsGetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject *rec
  * @param selector async msg target symbol selector
  * @return TRUE if successful set, FALSE otherwise
  */
-BOOLEAN EsSetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
+BOOLEAN EsSetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
 
 /*******************************************/
 /*   A S Y N C  M E S S A G E  Q U E U E   */

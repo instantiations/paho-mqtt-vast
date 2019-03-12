@@ -39,12 +39,17 @@ static void noOpFreeWorkTaskDataFunc(void *data) {
 static pboolean test_newFree() {
     EsWorkTask *task;
 
-    task = EsNewWorkTask(NULL, NULL);
+    task = EsNewWorkTask();
 
     FreeFuncCalled = 0;
     ES_DENY(FreeFuncCalled);
     EsFreeWorkTask(task);
     ES_DENY(FreeFuncCalled);
+
+    task = EsNewWorkTaskInit(counterWorkTaskFunc, (void *) (U_PTR) 5);
+    ES_ASSERT(EsGetWorkTaskFunc(task) == counterWorkTaskFunc);
+    ES_ASSERT(EsGetWorkTaskData(task) == (void*)(U_PTR)5);
+    EsFreeWorkTask(task);
 
     return TRUE;
 }
@@ -57,7 +62,7 @@ static pboolean test_accessors() {
     EsWorkTask *task;
     void *arg;
 
-    task = EsNewWorkTask(NULL, NULL);
+    task = EsNewWorkTaskInit(NULL, NULL);
     ES_ASSERT(task != NULL);
     ES_ASSERT(EsGetWorkTaskFunc(task) == NULL);
     ES_ASSERT(EsGetWorkTaskData(task) == NULL);
@@ -91,15 +96,17 @@ static pboolean test_properties() {
     /* Test against null task */
     task = NULL;
     ES_ASSERT(EsWorkTaskNumProps(task) == 0);
+    ES_ASSERT(EsWorkTaskPropIncludesKey(task, NULL) == FALSE);
     ES_ASSERT(EsWorkTaskPropAt(task, NULL) == NULL);
     EsWorkTaskPropAtPut(task, NULL, NULL);
     ES_ASSERT(EsWorkTaskPropValueIs(task, NULL, NULL) == FALSE);
     ES_ASSERT(EsWorkTaskPropRemoveKey(task, NULL) == NULL);
 
-    task = EsNewWorkTask(NULL, NULL);
+    task = EsNewWorkTask();
 
     /* Test against null args */
     ES_ASSERT(EsWorkTaskNumProps(task) == 0);
+    ES_ASSERT(EsWorkTaskPropIncludesKey(task, NULL) == FALSE);
     ES_ASSERT(EsWorkTaskPropAt(task, NULL) == NULL);
     EsWorkTaskPropAtPut(task, NULL, NULL);
     ES_ASSERT(EsWorkTaskPropValueIs(task, NULL, NULL) == FALSE);
@@ -113,6 +120,7 @@ static pboolean test_properties() {
     /* Add key */
     EsWorkTaskPropAtPut(task, "Key", "Value");
     ES_ASSERT(EsWorkTaskNumProps(task) == 1);
+    ES_ASSERT(EsWorkTaskPropIncludesKey(task, "Key") == TRUE);
     ES_ASSERT(EsWorkTaskPropAt(task, "Key") != NULL);
     ES_ASSERT(EsWorkTaskPropValueIs(task, "Key", "Value"));
 
@@ -174,7 +182,7 @@ static pboolean test_run() {
 
     Counter = 0;
     arg = (void *) (U_PTR) 5;
-    task = EsNewWorkTask(counterWorkTaskFunc, arg);
+    task = EsNewWorkTaskInit(counterWorkTaskFunc, arg);
     EsRunWorkTask(task);
     ES_ASSERT(Counter == (U_PTR) arg);
     EsFreeWorkTask(task);

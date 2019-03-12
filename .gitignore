@@ -2,7 +2,7 @@
 /.idea
 build
 /kdev4
-/cSource/thirdparty/mqtt-paho-c
-/cSource/thirdparty/plibsys
-/cSource/lib/es
+/c/thirdparty/mqtt-paho-c
+/c/thirdparty/plibsys
+/c/lib/es
 

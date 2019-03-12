@@ -57,11 +57,17 @@ typedef void (*EsWorkTaskFreeDataFunc)(void *args);
 
 /**
  * @brief Answer an initialized work task instance
+ * @return new work task
+ */
+EsWorkTask *EsNewWorkTask();
+
+/**
+ * @brief Answer an initialized work task instance
  * @param func to run
  * @param args user-supplied data
  * @return new work task
  */
-EsWorkTask *EsNewWorkTask(EsWorkTaskFunc func, void *args);
+EsWorkTask *EsNewWorkTaskInit(EsWorkTaskFunc func, void *args);
 
 /**
  * @brief Destroy the work task
@@ -131,7 +137,7 @@ void EsSetWorkTaskFreeDataFunc(EsWorkTask *task, EsWorkTaskFreeDataFunc func);
  * @return null-terminated value string if key found
  * @return NULL if key not found, key is NULL, or task is NULL
  */
-char *EsWorkTaskPropAt(EsWorkTask *task, const char *key);
+const char *EsWorkTaskPropAt(EsWorkTask *task, const char *key);
 
 /**
  * @brief Add the key/value string pair.
@@ -144,6 +150,14 @@ char *EsWorkTaskPropAt(EsWorkTask *task, const char *key);
  * @param value null-terminated string (which is copied internally)
  */
 void EsWorkTaskPropAtPut(EsWorkTask *task, const char *key, char *value);
+
+/**
+ * @brief Test if the properties of the task contains the key
+ * @param task
+ * @param key null-terminated string
+ * @return BOOLEAN TRUE if key exists, FALSE otherwise
+ */
+BOOLEAN EsWorkTaskPropIncludesKey(EsWorkTask *task, const char *key);
 
 /**
  * @brief Remove the key/value string pair and answer the old value
@@ -162,7 +176,7 @@ char *EsWorkTaskPropRemoveKey(EsWorkTask *task, const char *key);
  * @param value null-terminated string
  * @return TRUE if existing value and arg value are strequal, FALSE otherwise
  */
-BOOLEAN EsWorkTaskPropValueIs(EsWorkTask *task, const char *key, char *value);
+BOOLEAN EsWorkTaskPropValueIs(EsWorkTask *task, const char *key, const char *value);
 
 /**
  * @brief Answer the current number of properties

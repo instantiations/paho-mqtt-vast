@@ -15,7 +15,7 @@ if (POLICY CMP0075)
     cmake_policy(SET CMP0075 NEW)
 endif ()
 
-set(VAST_PAHO_LIBNAME paho-mqtt3c-vast)
+set(VAST_PAHO_SYNC_CB_LIBNAME paho-mqtt3c-vacallbacks)
 
 #-- RelWithDebInfo (None Debug Release RelWithDebInfo MinSizeRel)
 if (CMAKE_BUILD_TYPE STREQUAL "")
@@ -127,16 +127,16 @@ endif ()
 #------------------------------------------------------------------
 # C Source Variables
 #------------------------------------------------------------------
-set(ES_C_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/src)
-set(ES_C_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/src)
-set(ES_C_THIRDPARTY_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/thirdparty)
-set(ES_C_THIRDPARTY_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/thirdparty)
-set(ES_C_INC_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/include)
-set(ES_C_INC_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/include)
-set(ES_C_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/lib)
-set(ES_C_LIB_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/lib)
-set(ES_C_TEST_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cSource/test)
-set(ES_C_TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/cSource/test)
+set(ES_C_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/source)
+set(ES_C_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/source)
+set(ES_C_THIRDPARTY_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/thirdparty)
+set(ES_C_THIRDPARTY_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/thirdparty)
+set(ES_C_INC_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/include)
+set(ES_C_INC_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/include)
+set(ES_C_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/lib)
+set(ES_C_LIB_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/lib)
+set(ES_C_TEST_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/test)
+set(ES_C_TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/test)
 
 #------------------------------------------------------------------
 # 3rd Party Module: Plibsys
@@ -172,8 +172,9 @@ ExternalProject_Add(
         -DCMAKE_C_FLAGS="-fPIC"
         -DCMAKE_C_COMPILER_ID=${PLIBSYS_COMPILER_ID}
 )
-include_directories(${PLIBSYS_SRC_ROOT}/src)
-include_directories(${PLIBSYS_BIN_ROOT})
+set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
+        ${PLIBSYS_SRC_ROOT}/src
+        ${PLIBSYS_BIN_ROOT})
 if (MSVC)
     set(PLIBSYS_LIBRARY ${PLIBSYS_BIN_ROOT}/lib/plibsysstatic.lib)
 else ()
@@ -201,7 +202,7 @@ ExternalProject_Add(
         INSTALL_COMMAND ""
         LOG_DOWNLOAD ON
 )
-include_directories(${MQTT_PAHO_SRC_ROOT}/src)
+set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES} ${MQTT_PAHO_SRC_ROOT}/src)
 set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
 
 #------------------------------------------------------------------
@@ -209,31 +210,84 @@ set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
 #------------------------------------------------------------------
 set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es
         CACHE PATH "ES: Includes")
-include_directories(${ES_INCLUDES})
-find_library(ES_LIBRARY
+#-- Find VM dll and copy to bin dir
+find_library(ESVM_LIBRARY
         NAMES esvm40 esvm40.so
-        PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ES_LIBRARY}
+        PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ESVM_LIBRARY}
         NO_DEFAULT_PATH)
-message(STATUS "Found VA Smalltalk VM Library: ${ES_LIBRARY}")
-set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ES_LIBRARY})
+message(STATUS "Found VA Smalltalk VM Library: ${ESVM_LIBRARY}")
+configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
+#-- On Windows, find VM dll dependency (esae40.dll) and copy to bin dir
+if(WIN32)
+    find_library(ESAE_LIBRARY
+        NAMES esae40
+        PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ESAE_LIBRARY}
+        NO_DEFAULT_PATH)
+    message(STATUS "Found VA Smalltalk EBCDIC Library: ${ESAE_LIBRARY}")
+    configure_file(${ESAE_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esae40.dll COPYONLY)
+endif()
+
+set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES} ${ES_INCLUDES})
+set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ESAE_LIBRARY} ${ESVM_LIBRARY})
 
 #------------------------------------------------------------------
-# Common Build Instructions
+# Build Instructions: Common
 #------------------------------------------------------------------
+#-- Configure headers
+configure_file(
+        ${ES_C_SRC_DIR}/EsMqttVersionInfo.h.in
+        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
+
 set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
         ${ES_C_INC_SRC_DIR}
         ${ES_C_INC_BIN_DIR}
         ${ES_C_SRC_DIR}
         ${ES_C_BIN_DIR}
         CACHE PATH "VAST PAHO: Headers")
+
+set(VAST_SOURCES
+        ${ES_C_SRC_DIR}/EsProperties.h
+        ${ES_C_SRC_DIR}/EsProperties.c
+        ${ES_C_SRC_DIR}/EsWorkQueue.h
+        ${ES_C_SRC_DIR}/EsWorkQueue.c
+        ${ES_C_SRC_DIR}/EsWorkTask.h
+        ${ES_C_SRC_DIR}/EsWorkTask.c)
+
+#-- Platform Flags
+if (WIN32 AND NOT CYGWIN)
+    add_definitions(-DWINDOWS)
+elseif (UNIX AND NOT APPLE)
+    #-- Add unix flavor build defs
+    if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+        if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(i686)|(i386)|(x86)|(X86)|(amd64)|(AMD64)")
+            add_definitions(-DLINUX_386)
+        elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
+            add_definitions(-DLINUX_ARM)
+        else ()
+            message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR} is not supported")
+        endif ()
+        #-- Add Linux compiler definition
+        add_definitions(-DLINUX_ANY)
+    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "AIX")
+        #-- Add AIX compiler definition
+        add_definitions(-DAIXPPC -DRS6000)
+    elseif (${CMAKE_SYSTEM_NAME} MATCHES "(Solaris|SunOS)")
+        #-- Add Solaris compiler definition
+        add_definitions(-DSOLARIS)
+    else ()
+        message(FATAL_ERROR "Unsupported Unix Platform")
+    endif ()
+else ()
+    message(FATAL_ERROR "Unsupported Platform")
+endif ()
+
 include_directories(${VAST_PAHO_INCLUDES})
 
-#-- Configure headers
-configure_file(
-        ${ES_C_SRC_DIR}/EsMqttVersionInfo.h.in
-        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
-
-set(VAST_PAHO_SOURCES
+#----------------------------------------------------------------------------
+# Build Instructions: C Library for VA Smalltalk Eclipse Paho Sync Callbacks
+#----------------------------------------------------------------------------
+set(VAST_PAHO_SYNC_CB_SOURCES
+        ${VAST_SOURCES}
         ${ES_C_SRC_DIR}/EsMqttAsyncArguments.h
         ${ES_C_SRC_DIR}/EsMqttAsyncArguments.c
         ${ES_C_SRC_DIR}/EsMqttAsyncMessages.h
@@ -244,91 +298,92 @@ set(VAST_PAHO_SOURCES
         ${ES_C_SRC_DIR}/EsMqttLibrary.c
         ${ES_C_SRC_DIR}/EsMqttUserPrims.h
         ${ES_C_SRC_DIR}/EsMqttUserPrims.c
-        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h
-        ${ES_C_SRC_DIR}/EsWorkTask.h
-        ${ES_C_SRC_DIR}/EsWorkTask.c)
+        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
 
-#------------------------------------------------------------------
-# OS-Dependent Build Instructions
-#------------------------------------------------------------------
 #-- Add the platform specific subdirectory
 if (WIN32 AND NOT CYGWIN)
     #-- Configure sources
     configure_file(
-            ${ES_C_SRC_DIR}/os/windows/vastpaho.def.in
-            ${ES_C_BIN_DIR}/os/windows/vastpaho.def)
+            ${ES_C_SRC_DIR}/os/windows/vast_paho_sync_callbacks.def.in
+            ${ES_C_BIN_DIR}/os/windows/vast_paho_sync_callbacks.def)
     configure_file(
-            ${ES_C_SRC_DIR}/os/windows/vastpaho.rc.in
-            ${ES_C_BIN_DIR}/os/windows/vastpaho.rc)
+            ${ES_C_SRC_DIR}/os/windows/vast_paho_sync_callbacks.rc.in
+            ${ES_C_BIN_DIR}/os/windows/vast_paho_sync_callbacks.rc)
 
     #-- Add windows sources
-    set(VAST_PAHO_SOURCES ${VAST_PAHO_SOURCES}
-            ${ES_C_BIN_DIR}/os/windows/vastpaho.def
-            ${ES_C_BIN_DIR}/os/windows/vastpaho.rc)
+    set(VAST_PAHO_SYNC_CB_SOURCES ${VAST_PAHO_SYNC_CB_SOURCES}
+            ${ES_C_BIN_DIR}/os/windows/vast_paho_sync_callbacks.def
+            ${ES_C_BIN_DIR}/os/windows/vast_paho_sync_callbacks.rc)
 
     set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ws2_32)
-
-    add_definitions(-DWINDOWS)
-
-elseif (UNIX AND NOT APPLE)
-
-    #-- Add unix flavor build defs
-    if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-
-        if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(i686)|(i386)|(x86)|(X86)|(amd64)|(AMD64)")
-            add_definitions(-DLINUX_386)
-        elseif (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
-            add_definitions(-DLINUX_ARM)
-        else ()
-            message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR} is not supported")
-        endif ()
-
-        #-- Add Linux compiler definition
-        add_definitions(-DLINUX_ANY)
-
-    elseif (${CMAKE_SYSTEM_NAME} STREQUAL "AIX")
-
-        #-- Add AIX compiler definition
-        add_definitions(-DAIXPPC -DRS6000)
-
-    elseif (${CMAKE_SYSTEM_NAME} MATCHES "(Solaris|SunOS)")
-
-        #-- Add Solaris compiler definition
-        add_definitions(-DSOLARIS)
-
-    else ()
-        message(FATAL_ERROR "Unsupported Unix Platform")
-    endif ()
-
-else ()
-    message(FATAL_ERROR "Unsupported Platform")
 endif ()
 
 #------------------------------------------------------------------
-# Generate C Library
+# Generate C Library for VA Smalltalk Eclipse Paho Sync Callbacks
 #------------------------------------------------------------------
-add_library(${VAST_PAHO_LIBNAME} SHARED ${VAST_PAHO_SOURCES})
-add_dependencies(${VAST_PAHO_LIBNAME} ${VAST_PAHO_DEPS})
-target_link_libraries(${VAST_PAHO_LIBNAME} PRIVATE ${VAST_PAHO_LIBS})
+set(VAST_PAHO_SYNC_CB_DEPS ${VAST_PAHO_DEPS})
+set(VAST_PAHO_SYNC_CB_LIBS ${VAST_PAHO_LIBS})
+
+add_library(${VAST_PAHO_SYNC_CB_LIBNAME} SHARED ${VAST_PAHO_SYNC_CB_SOURCES})
+add_dependencies(${VAST_PAHO_SYNC_CB_LIBNAME} ${VAST_PAHO_SYNC_CB_DEPS})
+target_link_libraries(${VAST_PAHO_SYNC_CB_LIBNAME} PRIVATE ${VAST_PAHO_SYNC_CB_LIBS})
 
 #-- Don't prefix with 'lib' on gcc
 #-- This is for backwards compatibility
 if (UNIX OR CMAKE_COMPILER_IS_GNUCC)
-    set_target_properties(${VAST_PAHO_LIBNAME} PROPERTIES PREFIX "")
+    set_target_properties(${VAST_PAHO_SYNC_CB_LIBNAME} PROPERTIES PREFIX "")
 endif ()
 
 #------------------------------------------------------------------
 # UNIT TEST SUITES
 #------------------------------------------------------------------
-if(BUILD_TESTING)
+if (BUILD_TESTING)
     enable_testing()
     include_directories(${ES_C_TEST_SRC_DIR} ${ES_C_TEST_SRC_DIR}/esunit)
 
+    #-- Tests: EsProperties
+    add_executable(tests_esproperties
+            ${ES_C_TEST_SRC_DIR}/TestEsProperties.c
+            ${ES_C_SRC_DIR}/EsProperties.c)
+    add_dependencies(tests_esproperties ${PLIBSYS_PROJ_NAME})
+    target_link_libraries(tests_esproperties ${VAST_PAHO_SYNC_CB_LIBS})
+    add_test(NAME tests_esproperties COMMAND tests_esproperties)
+    set_property(TARGET tests_esproperties PROPERTY PROJECT_LABEL "Tests_EsProperties")
+
     #-- Tests: EsWorkTask
-    add_executable(tests_esworktask ${ES_C_TEST_SRC_DIR}/TestEsWorkTask.c ${ES_C_SRC_DIR}/EsWorkTask.c)
+    add_executable(tests_esworktask
+            ${ES_C_TEST_SRC_DIR}/TestEsWorkTask.c
+            ${ES_C_SRC_DIR}/EsProperties.c
+            ${ES_C_SRC_DIR}/EsWorkTask.c)
     add_dependencies(tests_esworktask ${PLIBSYS_PROJ_NAME})
-    target_link_libraries(tests_esworktask ${VAST_PAHO_LIBS})
+    target_link_libraries(tests_esworktask ${VAST_PAHO_SYNC_CB_LIBS})
     add_test(NAME tests_esworktask COMMAND tests_esworktask)
     set_property(TARGET tests_esworktask PROPERTY PROJECT_LABEL "Tests_EsWorkTask")
 
-endif()
+    #-- Tests: EsWorkQueue
+    add_executable(tests_esworkqueue
+            ${ES_C_TEST_SRC_DIR}/TestEsWorkQueue.c
+            ${ES_C_SRC_DIR}/EsProperties.c
+            ${ES_C_SRC_DIR}/EsWorkQueue.c
+            ${ES_C_SRC_DIR}/EsWorkTask.c)
+    add_dependencies(tests_esworkqueue ${PLIBSYS_PROJ_NAME})
+    target_link_libraries(tests_esworkqueue ${VAST_PAHO_SYNC_CB_LIBS})
+    add_test(NAME tests_esworkqueue COMMAND tests_esworkqueue)
+    set_property(TARGET tests_esworkqueue PROPERTY PROJECT_LABEL "Tests_EsWorkQueue")
+
+    #-- Tests: EsMqttLibrary
+    add_executable(tests_esmqttlibrary
+            ${ES_C_TEST_SRC_DIR}/TestEsMqttLibrary.c
+            ${ES_C_SRC_DIR}/EsProperties.c
+            ${ES_C_SRC_DIR}/EsWorkTask.c
+            ${ES_C_SRC_DIR}/EsMqttCallbacks.c
+            ${ES_C_SRC_DIR}/EsMqttAsyncMessages.c
+            ${ES_C_SRC_DIR}/EsMqttAsyncArguments.c
+            ${ES_C_SRC_DIR}/EsMqttUserPrims.c
+            ${ES_C_SRC_DIR}/EsMqttLibrary.c
+            ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
+    add_dependencies(tests_esmqttlibrary ${VAST_PAHO_DEPS})
+    target_link_libraries(tests_esmqttlibrary ${VAST_PAHO_LIBS})
+    add_test(NAME tests_esmqttlibrary COMMAND tests_esmqttlibrary)
+    set_property(TARGET tests_esmqttlibrary PROPERTY PROJECT_LABEL "Tests_EsMqttLibrary")
+endif ()

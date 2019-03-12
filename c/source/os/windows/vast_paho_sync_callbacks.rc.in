@@ -15,12 +15,12 @@ BEGIN
 		BLOCK "040904b0"
 		BEGIN
 			VALUE "CompanyName", "Instantiations\0"
-			VALUE "FileDescription", "VA Smalltalk MQTT Paho Connector\0"
+			VALUE "FileDescription", "VA Smalltalk Eclipse Paho Synchronous Callbacks\0"
 			VALUE "FileVersion", "R@VASTPAHO_PRODUCT_VERSION@\0"
 			VALUE "InternalName", "\0"
 			VALUE "LegalCopyright", "@VASTPAHO_SHORT_COPYRIGHT@.\0"
 			VALUE "OriginalFilename", "@VAST_PAHO_LIBNAME@.dll\0"
-			VALUE "ProductName", "VA Smalltalk\0"
+			VALUE "ProductName", "VA Smalltalk Eclipse Paho Synchronous Callbacks\0"
 			VALUE "ProductVersion", "@VASTPAHO_PRODUCT_VERSION@\0"
 		END
 	END

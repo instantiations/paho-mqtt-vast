@@ -25,8 +25,8 @@
  * The module state lifecyle is
  * UNITIT -> INIT -> SHUTDOWN
  */
-static const I_32 ESMQTT_LIBRARY_UNINIT = 0;
-static const I_32 ESMQTT_LIBRARY_INIT = 1;
+static const I_32 ESMQTT_LIBRARY_UNINIT	= 0;
+static const I_32 ESMQTT_LIBRARY_INIT =	1;
 static const I_32 ESMQTT_LIBRARY_SHUTDOWN = 2;
 
 

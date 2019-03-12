@@ -147,7 +147,7 @@ union _EsMqttAsynMessageArg {
 };
 
 struct _EsMqttAsyncMessage {
-    enum MqttVastCallbackTypes cbType;
+    enum EsMqttVastCallbackTypes cbType;
     EsObject receiver;
     EsObject selector;
     EsMqttAsyncMessageArg args[];
@@ -197,7 +197,7 @@ static BOOLEAN hiLowFromPointer(void *ptr, I_32 *iHigh, I_32 *iLow) {
  * @param selectorPtr [output]
  * @return TRUE if success, FALSE otherwise
  */
-static BOOLEAN getAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject *receiverPtr, EsObject *selectorPtr) {
+static BOOLEAN getAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiverPtr, EsObject *selectorPtr) {
     if ((receiverPtr == NULL) || (selectorPtr == NULL)) {
         return FALSE;
     }
@@ -225,7 +225,7 @@ static BOOLEAN getAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject
  * @param receiver
  * @param selector
  */
-static BOOLEAN setAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
+static BOOLEAN setAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
     if (EsIsValidCallbackType(cbType)) {
         /* WRITE LOCK */
         p_rwlock_writer_lock(_AsyncMessageTargetsLock);
@@ -245,7 +245,7 @@ static BOOLEAN setAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject
  * @param handler[output] set to NULL if fails
  * @return TRUE if success, FALSE otherwise
  */
-static BOOLEAN getAsyncMessageHandler(enum MqttVastCallbackTypes cbType, AsyncMessageHandlerFunc *handlerPtr) {
+static BOOLEAN getAsyncMessageHandler(enum EsMqttVastCallbackTypes cbType, AsyncMessageHandlerFunc *handlerPtr) {
     if (handlerPtr == NULL) {
         return FALSE;
     } else if (EsIsValidCallbackType(cbType)) {
@@ -434,7 +434,7 @@ void EsMqttAsyncMessagesShutdown() {
     _DummyVMContext.globalInfo = NULL;
 }
 
-EsMqttAsyncMessage *EsNewAsyncMessage(enum MqttVastCallbackTypes cbType, U_32 argCount, ...) {
+EsMqttAsyncMessage *EsNewAsyncMessage(enum EsMqttVastCallbackTypes cbType, U_32 argCount, ...) {
     EsMqttAsyncMessage *msg;
     va_list argsList;
 
@@ -449,21 +449,21 @@ EsMqttAsyncMessage *EsNewAsyncMessage(enum MqttVastCallbackTypes cbType, U_32 ar
     msg->selector = EsNil;
     va_start(argsList, argCount);
     switch (cbType) {
-        case MQTTVAST_CALLBACK_TYPE_TRACE:
+        case ESMQTT_CB_TYPE_TRACE:
             if (argCount != 2) {
                 return NULL;
             }
             msg->args[0].i = va_arg(argsList, I_32);
             msg->args[1].str = EsCopyString(va_arg(argsList, char*));
             break;
-        case MQTTVAST_CALLBACK_TYPE_CONNECTIONLOST:
+        case ESMQTT_CB_TYPE_CONNECTIONLOST:
             if (argCount != 2) {
                 return NULL;
             }
             msg->args[0].i = va_arg(argsList, I_32);
             msg->args[1].str = EsCopyString(va_arg(argsList, char*));
             break;
-        case MQTTVAST_CALLBACK_TYPE_DISCONNECTED:
+        case ESMQTT_CB_TYPE_DISCONNECTED:
             if (argCount != 3) {
                 return NULL;
             }
@@ -471,7 +471,7 @@ EsMqttAsyncMessage *EsNewAsyncMessage(enum MqttVastCallbackTypes cbType, U_32 ar
             msg->args[1].props = EsCopyProperties(va_arg(argsList, MQTTProperties*));
             msg->args[2].reasonCode = va_arg(argsList, enum MQTTReasonCodes);
             break;
-        case MQTTVAST_CALLBACK_TYPE_MESSAGEARRIVED:
+        case ESMQTT_CB_TYPE_MESSAGEARRIVED:
             if (argCount != 4) {
                 return NULL;
             }
@@ -480,14 +480,14 @@ EsMqttAsyncMessage *EsNewAsyncMessage(enum MqttVastCallbackTypes cbType, U_32 ar
             msg->args[2].i = va_arg(argsList, I_32);
             msg->args[3].msg = EsCopyMessage(va_arg(argsList, MQTTClient_message*));
             break;
-        case MQTTVAST_CALLBACK_TYPE_DELIVERYCOMPLETE:
+        case ESMQTT_CB_TYPE_DELIVERYCOMPLETE:
             if (argCount != 2) {
                 return NULL;
             }
             msg->args[0].ptr = va_arg(argsList, void*);
             msg->args[1].token = va_arg(argsList, MQTTClient_deliveryToken);
             break;
-        case MQTTVAST_CALLBACK_TYPE_PUBLISHED:
+        case ESMQTT_CB_TYPE_PUBLISHED:
             if (argCount != 5) {
                 return NULL;
             }
@@ -497,7 +497,7 @@ EsMqttAsyncMessage *EsNewAsyncMessage(enum MqttVastCallbackTypes cbType, U_32 ar
             msg->args[3].props = EsCopyProperties(va_arg(argsList, MQTTProperties*));
             msg->args[4].reasonCode = va_arg(argsList, enum MQTTReasonCodes);
             break;
-        case MQTTVAST_CALLBACK_TYPE_CHECKPOINT:
+        case ESMQTT_CB_TYPE_CHECKPOINT:
             if (argCount != 1) {
                 return NULL;
             }
@@ -520,11 +520,11 @@ void EsFreeAsyncMessage(EsMqttAsyncMessage *message) {
     }
 }
 
-BOOLEAN EsGetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector) {
+BOOLEAN EsGetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector) {
     return getAsyncMessageTarget(cbType, receiver, selector);
 }
 
-BOOLEAN EsSetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
+BOOLEAN EsSetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
     return setAsyncMessageTarget(cbType, receiver, selector);
 }
 
@@ -532,7 +532,7 @@ BOOLEAN EsSetAsyncMessageTarget(enum MqttVastCallbackTypes cbType, EsObject rece
 BOOLEAN EsPostMessageToAsyncQueue(EsMqttAsyncMessage *message) {
     EsWorkTask *task;
 
-    task = EsNewWorkTask(submitToAsyncQueue, message);
+    task = EsNewWorkTaskInit(submitToAsyncQueue, message);
     if (!task) {
         return FALSE;
     }
