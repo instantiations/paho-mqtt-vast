@@ -408,7 +408,5 @@ void EsWorkQueueSubmit(EsWorkQueue *queue, EsWorkTask *task) {
 }
 
 U_32 EsNumWorkQueueTasks(const EsWorkQueue *queue) {
-    if (queue != NULL) {
-        queue->getNumTasks(queue);
-    }
+    return (queue != NULL) ? queue->getNumTasks(queue) : 0;
 }
