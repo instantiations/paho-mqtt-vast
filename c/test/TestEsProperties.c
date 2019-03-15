@@ -27,7 +27,7 @@ static pboolean test_properties() {
 
     /* Test against null props */
     props = NULL;
-    ES_ASSERT(EsPropertyNum(props) == 0);
+    ES_ASSERT(EsNumProperties(props) == 0);
     ES_ASSERT(EsPropertyIncludesKey(props, NULL) == FALSE);
     ES_ASSERT(EsPropertyAt(props, NULL) == NULL);
     EsPropertyAtPut(props, NULL, NULL);
@@ -40,7 +40,7 @@ static pboolean test_properties() {
     props = EsNewProperties();
 
     /* Test against null args */
-    ES_ASSERT(EsPropertyNum(props) == 0);
+    ES_ASSERT(EsNumProperties(props) == 0);
     ES_ASSERT(EsPropertyIncludesKey(props, NULL) == FALSE);
     ES_ASSERT(EsPropertyAt(props, NULL) == NULL);
     EsPropertyAtPut(props, NULL, NULL);
@@ -49,14 +49,14 @@ static pboolean test_properties() {
     EsPropertyPairAtIndex(props, 0, NULL);
 
     /* Test empty prop props / valid keys */
-    ES_ASSERT(EsPropertyNum(props) == 0);
+    ES_ASSERT(EsNumProperties(props) == 0);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
     ES_ASSERT(EsPropertyAt(props, "Key") == NULL);
     ES_ASSERT(EsPropertyValueIs(props, "Key", "Value") == FALSE);
 
     /* Add key */
     EsPropertyAtPut(props, "Key", "Value");
-    ES_ASSERT(EsPropertyNum(props) == 1);
+    ES_ASSERT(EsNumProperties(props) == 1);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key") == TRUE);
     ES_ASSERT(EsPropertyAt(props, "Key") != NULL);
     ES_ASSERT(EsPropertyValueIs(props, "Key", "Value"));
@@ -69,7 +69,7 @@ static pboolean test_properties() {
 
     /* Add second key */
     EsPropertyAtPut(props, "Key2", "Value2");
-    ES_ASSERT(EsPropertyNum(props) == 2);
+    ES_ASSERT(EsNumProperties(props) == 2);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key") == TRUE);
     ES_ASSERT(EsPropertyAt(props, "Key") != NULL);
     ES_ASSERT(EsPropertyValueIs(props, "Key", "Value"));
@@ -79,7 +79,7 @@ static pboolean test_properties() {
 
     /* Add third key */
     EsPropertyAtPut(props, "Key3", "Value3");
-    ES_ASSERT(EsPropertyNum(props) == 3);
+    ES_ASSERT(EsNumProperties(props) == 3);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key") == TRUE);
     ES_ASSERT(EsPropertyAt(props, "Key") != NULL);
     ES_ASSERT(EsPropertyValueIs(props, "Key", "Value"));
@@ -98,7 +98,7 @@ static pboolean test_properties() {
 
     /* Remove head */
     val = EsPropertyRemoveKey(props, "Key");
-    ES_ASSERT(EsPropertyNum(props) == 2);
+    ES_ASSERT(EsNumProperties(props) == 2);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == TRUE);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key3") == TRUE);
@@ -109,7 +109,7 @@ static pboolean test_properties() {
 
     /* Remove tail */
     val = EsPropertyRemoveKey(props, "Key3");
-    ES_ASSERT(EsPropertyNum(props) == 1);
+    ES_ASSERT(EsNumProperties(props) == 1);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == TRUE);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key3") == FALSE);
@@ -120,7 +120,7 @@ static pboolean test_properties() {
 
     /* Remove last*/
     val = EsPropertyRemoveKey(props, "Key2");
-    ES_ASSERT(EsPropertyNum(props) == 0);
+    ES_ASSERT(EsNumProperties(props) == 0);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == FALSE);
     ES_ASSERT(EsPropertyIncludesKey(props, "Key3") == FALSE);
@@ -146,13 +146,13 @@ static pboolean test_sequenceable() {
     EsPropertyAtPut(p, "key3", "value");
     EsPropertyAtPut(p, "key4", "value");
 
-    totalNum = EsPropertyNum(p);
+    totalNum = EsNumProperties(p);
     for(i = 0; i < totalNum; i++) {
         EsPropertyPairAtIndex(p, i, &pair);
-        printf("%s:%s\n", pair.key, pair.value);
     }
     ES_ASSERT(i == 4);
 }
+
 /**************************/
 /*   T E S T  S U I T E   */
 /**************************/

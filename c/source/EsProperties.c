@@ -12,10 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*******************/
-/*   M A C R O S   */
-/*******************/
-
 /**
  * @brief BOOLEAN string comparison.
  * @return TRUE if strings are equal, FALSE otherwise
@@ -40,6 +36,10 @@ struct _EsProperty {
     EsProperty *next;
 };
 
+/**
+ * @brief Container for properties
+ * @note This is what the user has a handle to
+ */
 struct _EsProperties {
     EsProperty *head;
 };
@@ -124,10 +124,24 @@ void EsFreeProperties(EsProperties *props) {
             free(temp->value);
             free(temp);
         }
+        free(props);
     }
 }
 
-void EsPropertyPairAtIndex(EsProperties *props, U_32 index, EsPropertyPair *pair) {
+U_32 EsNumProperties(const EsProperties *props) {
+    U_32 numProps = 0;
+
+    if (props != NULL) {
+        EsProperty *curr = props->head;
+        while (curr != NULL) {
+            numProps++;
+            curr = curr->next;
+        }
+    }
+    return numProps;
+}
+
+void EsPropertyPairAtIndex(const EsProperties *props, U_32 index, EsPropertyPair *const pair) {
     EsProperty *curr = NULL;
     U_32 i;
 
@@ -151,7 +165,7 @@ void EsPropertyPairAtIndex(EsProperties *props, U_32 index, EsPropertyPair *pair
     }
 }
 
-const char *EsPropertyAt(EsProperties *props, const char *key) {
+const char *EsPropertyAt(const EsProperties *props, const char *key) {
     EsProperty *node = NULL;
 
     node = propertyNodeAt(props, key);
@@ -180,46 +194,32 @@ void EsPropertyAtPut(EsProperties *props, const char *key, char *value) {
     }
 }
 
-BOOLEAN EsPropertyIncludesKey(EsProperties *props, const char *key) {
+BOOLEAN EsPropertyIncludesKey(const EsProperties *props, const char *key) {
     return (EsPropertyAt(props, key) != NULL) ? TRUE : FALSE;
 }
 
 char *EsPropertyRemoveKey(EsProperties *props, const char *key) {
     char *value = NULL;
 
-    if (props != NULL) {
-        EsProperty *node = propertyNodeAt(props, key);
-        if (node != NULL) {
-            EsProperty *beforeNode = propertyNodeBeforeNodeAt(props, key);
-            value = node->value;
-            if (beforeNode != NULL) {
-                beforeNode->next = node->next;
-            } else {
-                props->head = node->next;
-            }
-            node->next = NULL;
-            free(node);
+    EsProperty *node = propertyNodeAt(props, key);
+    if (node != NULL) {
+        EsProperty *beforeNode = propertyNodeBeforeNodeAt(props, key);
+        value = node->value;
+        if (beforeNode != NULL) {
+            beforeNode->next = node->next;
+        } else {
+            props->head = node->next;
         }
+        node->next = NULL;
+        free(node);
     }
     return value;
 }
 
-BOOLEAN EsPropertyValueIs(EsProperties *props, const char *key, const char *value) {
+BOOLEAN EsPropertyValueIs(const EsProperties *props, const char *key, const char *value) {
     const char *result = NULL;
 
     result = EsPropertyAt(props, key);
     return (result != NULL && value != NULL) ? STREQ(result, value) : FALSE;
 }
 
-U_32 EsPropertyNum(EsProperties *props) {
-    U_32 numProps = 0;
-
-    if (props != NULL) {
-        EsProperty *curr = props->head;
-        while (curr != NULL) {
-            numProps++;
-            curr = curr->next;
-        }
-    }
-    return numProps;
-}

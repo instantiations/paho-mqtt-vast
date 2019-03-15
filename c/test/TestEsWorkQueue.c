@@ -5,6 +5,7 @@
 #include "esuser.h"
 
 static U_PTR Counter = 0;
+static EsWorkQueue *Queue;
 static pboolean FreeFuncCalled = FALSE;
 
 /*******************/
@@ -28,6 +29,23 @@ static void noOpFreeWorkTaskDataFunc(void *data) {
     FreeFuncCalled = TRUE;
 }
 
+/**
+ * @brief Thread-Function
+ * @param arg
+ * @return Exit code after thread is done
+ */
+static void *produceCounterIncrementer(void *arg) {
+    int numTasks = (U_32) (U_PTR) arg;
+    for (int i = 0; i < numTasks; i++) {
+        EsWorkTask *task = NULL;
+
+        task = EsNewWorkTaskInit(counterWorkTaskFunc, (void *) (U_PTR) 1);
+        EsWorkQueueSubmit(Queue, task);
+    }
+    p_uthread_exit(0);
+    return NULL;
+}
+
 /*****************/
 /*   T E S T S   */
 /*****************/
@@ -38,23 +56,79 @@ static void noOpFreeWorkTaskDataFunc(void *data) {
  * @return TRUE if tests passes, FALSE otherwise
  */
 static pboolean test_newFree() {
-    EsWorkQueue *queue;
 
-    queue = EsNewWorkQueue(ES_QUEUE_SYNCHRONOUS);
-    //EsFreeWorkQueue(queue);
+    Queue = NULL;
+    ES_ASSERT(EsNumWorkQueueTasks(Queue) == 0);
+    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
+    ES_ASSERT(EsNumWorkQueueTasks(Queue) == 0);
+    ES_ASSERT(Queue != NULL);
+    EsFreeWorkQueue(Queue);
 
     return TRUE;
 }
 
 /**
- * @brief Test all Get/Set Accessors
+ * @brief Test property accessing
  * @return TRUE if tests passes, FALSE otherwise
  */
-static pboolean test_accessors() {
-    EsWorkQueue *queue;
+static pboolean test_properties() {
+    EsProperties *props;
 
-    //queue = EsNewWorkQueue(ES_QUEUE_SYNCHRONOUS);
+    /* Test against null task */
+    Queue = NULL;
+    ES_ASSERT(EsGetWorkQueueProps(Queue) == NULL);
 
+    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
+    props = EsGetWorkQueueProps(Queue);
+    ES_ASSERT(EsNumProperties(props) == 0);
+
+    EsFreeWorkQueue(Queue);
+
+    return TRUE;
+}
+
+/**
+ * @brief Test execution of a single task in the
+ * test thread for SYNC
+ * @return TRUE if tests passes, FALSE otherwise
+ */
+static pboolean test_sync_currentThreadProducer() {
+    U_32 numTasks = 1000;
+
+    Counter = 0;
+    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
+    ES_ASSERT(Counter == 0);
+    for (int i = 0; i < numTasks; i++) {
+        EsWorkTask *task = NULL;
+
+        task = EsNewWorkTaskInit(counterWorkTaskFunc, (void *) (U_PTR) 1);
+        EsWorkQueueSubmit(Queue, task);
+    }
+    ES_ASSERT(EsNumWorkQueueTasks(Queue) == 0);
+    EsFreeWorkQueue(Queue);
+    ES_ASSERT(Counter == numTasks);
+    return TRUE;
+}
+
+/**
+ * @brief Test execution of a tasks that are produced
+ * in separate threads for type SYNC
+ * @return TRUE if tests passes, FALSE otherwise
+ */
+static pboolean test_sync_separateThreadProducer() {
+    EsWorkQueue *queue = NULL;
+    U_32 numTasks = 1000;
+
+    Counter = 0;
+    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
+    EsWorkQueueInit(queue);
+
+    PUThread *producer = p_uthread_create((PUThreadFunc) produceCounterIncrementer, (ppointer) (U_PTR) numTasks, TRUE);
+    ES_DENY(producer == NULL);
+    p_uthread_join(producer);
+    p_uthread_unref(producer);
+    EsFreeWorkQueue(queue);
+    ES_ASSERT(Counter == numTasks);
     return TRUE;
 }
 
@@ -68,6 +142,7 @@ static pboolean test_accessors() {
  */
 int main() {
     ES_RUN_TEST(test_newFree);
-    ES_RUN_TEST(test_accessors);
+    ES_RUN_TEST(test_sync_currentThreadProducer);
+    ES_RUN_TEST(test_sync_separateThreadProducer);
     ES_RETURN_TEST_RESULTS();
 }

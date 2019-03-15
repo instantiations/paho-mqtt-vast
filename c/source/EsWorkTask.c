@@ -60,6 +60,10 @@ void EsFreeWorkTask(EsWorkTask *task) {
     }
 }
 
+EsProperties *EsGetWorkTaskProps(const EsWorkTask *task) {
+    return (task != NULL) ? task->props : NULL;
+}
+
 EsWorkTaskFunc EsGetWorkTaskFunc(const EsWorkTask *task) {
     return (task != NULL) ? task->func : NULL;
 }
@@ -88,36 +92,6 @@ void EsSetWorkTaskData(EsWorkTask *task, void *data) {
     if (task != NULL) {
         task->data = data;
     }
-}
-
-const char *EsWorkTaskPropAt(EsWorkTask *task, const char *key) {
-    return (task != NULL) ? EsPropertyAt(task->props, key) : NULL;
-}
-
-void EsWorkTaskPropAtPut(EsWorkTask *task, const char *key, char *value) {
-    if (task != NULL) {
-        if (task->props != NULL) {
-            EsPropertyAtPut(task->props, key, value);
-        } else {
-            task->props = EsNewProperties();
-        }
-    }
-}
-
-BOOLEAN EsWorkTaskPropIncludesKey(EsWorkTask *task, const char *key) {
-    return (task != NULL) ? EsPropertyIncludesKey(task->props, key) : FALSE;
-}
-
-char *EsWorkTaskPropRemoveKey(EsWorkTask *task, const char *key) {
-    return (task != NULL) ? EsPropertyRemoveKey(task->props, key) : NULL;
-}
-
-BOOLEAN EsWorkTaskPropValueIs(EsWorkTask *task, const char *key, const char *value) {
-    return (task != NULL) ? EsPropertyValueIs(task->props, key, value) : FALSE;
-}
-
-U_32 EsWorkTaskNumProps(EsWorkTask *task) {
-    return (task != NULL) ? EsPropertyNum(task->props) : 0;
 }
 
 void EsRunWorkTask(EsWorkTask *task) {

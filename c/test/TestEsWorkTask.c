@@ -89,82 +89,21 @@ static pboolean test_accessors() {
     return TRUE;
 }
 
+/**
+ * @brief Test property accessing
+ * @return TRUE if tests passes, FALSE otherwise
+ */
 static pboolean test_properties() {
     EsWorkTask *task;
-    char *val;
+    EsProperties *props;
 
     /* Test against null task */
     task = NULL;
-    ES_ASSERT(EsWorkTaskNumProps(task) == 0);
-    ES_ASSERT(EsWorkTaskPropIncludesKey(task, NULL) == FALSE);
-    ES_ASSERT(EsWorkTaskPropAt(task, NULL) == NULL);
-    EsWorkTaskPropAtPut(task, NULL, NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, NULL, NULL) == FALSE);
-    ES_ASSERT(EsWorkTaskPropRemoveKey(task, NULL) == NULL);
+    ES_ASSERT(EsGetWorkTaskProps(task) == NULL);
 
     task = EsNewWorkTask();
-
-    /* Test against null args */
-    ES_ASSERT(EsWorkTaskNumProps(task) == 0);
-    ES_ASSERT(EsWorkTaskPropIncludesKey(task, NULL) == FALSE);
-    ES_ASSERT(EsWorkTaskPropAt(task, NULL) == NULL);
-    EsWorkTaskPropAtPut(task, NULL, NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, NULL, NULL) == FALSE);
-    ES_ASSERT(EsWorkTaskPropRemoveKey(task, NULL) == NULL);
-
-    /* Test empty prop task / valid keys */
-    ES_ASSERT(EsWorkTaskNumProps(task) == 0);
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key") == NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key", "Value") == FALSE);
-
-    /* Add key */
-    EsWorkTaskPropAtPut(task, "Key", "Value");
-    ES_ASSERT(EsWorkTaskNumProps(task) == 1);
-    ES_ASSERT(EsWorkTaskPropIncludesKey(task, "Key") == TRUE);
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key") != NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key", "Value"));
-
-    /* Add second key */
-    EsWorkTaskPropAtPut(task, "Key2", "Value2");
-    ES_ASSERT(EsWorkTaskNumProps(task) == 2);
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key") != NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key", "Value"));
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key2") != NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key2", "Value2"));
-
-    /* Add third key */
-    EsWorkTaskPropAtPut(task, "Key3", "Value3");
-    ES_ASSERT(EsWorkTaskNumProps(task) == 3);
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key") != NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key", "Value"));
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key2") != NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key2", "Value2"));
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key3") != NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key3", "Value3"));
-
-    /* Remove head */
-    val = EsWorkTaskPropRemoveKey(task, "Key");
-    ES_ASSERT(EsWorkTaskNumProps(task) == 2);
-    ES_ASSERT(val != NULL);
-    ES_ASSERT(strncmp(val, "Value", strlen("Value")) == 0);
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key") == NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key", "Value") == FALSE);
-
-    /* Remove tail */
-    val = EsWorkTaskPropRemoveKey(task, "Key3");
-    ES_ASSERT(EsWorkTaskNumProps(task) == 1);
-    ES_ASSERT(val != NULL);
-    ES_ASSERT(strncmp(val, "Value3", strlen("Value3")) == 0);
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key3") == NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key3", "Value3") == FALSE);
-
-    /* Remove last*/
-    val = EsWorkTaskPropRemoveKey(task, "Key2");
-    ES_ASSERT(EsWorkTaskNumProps(task) == 0);
-    ES_ASSERT(val != NULL);
-    ES_ASSERT(strncmp(val, "Value2", strlen("Value2")) == 0);
-    ES_ASSERT(EsWorkTaskPropAt(task, "Key2") == NULL);
-    ES_ASSERT(EsWorkTaskPropValueIs(task, "Key2", "Value2") == FALSE);
+    props = EsGetWorkTaskProps(task);
+    ES_ASSERT(EsNumProperties(props) == 0);
 
     EsFreeWorkTask(task);
 

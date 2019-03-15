@@ -5,6 +5,27 @@
 #
 #  Contributors:
 #     Seth Berman - initial version
+#
+#  QUICK BUILD INSTRUCTIONS:
+#
+#  Mingw-w64 (Windows)
+#  >mkdir build && cd build
+#  >cmake .. -G"MinGW Makefiles"
+#  >mingw32-make
+#  >mingw32-make test
+#
+#  Linux 64-bit (or Linux 32-bit on a 32-bit Linux OS)
+#  >mkdir build && cd build
+#  >cmake .. -G"Unix Makefiles"
+#  >make
+#  >make test
+#
+#  Linux 32-bit (cross-compile on 64-bit machine)
+#  >mkdir build && cd build
+#  >cmake .. -DES_64BIT=OFF -G"Unix Makefiles"
+#  >make
+#  >make test
+#
 #*******************************************************************************/
 cmake_minimum_required(VERSION 3.0..3.13)
 project(paho-mqtt-vast)
@@ -92,6 +113,15 @@ endif ()
 #------------------------------------------------------------------
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc")
+endif ()
+
+#------------------------------------------------------------------
+# Microsoft Visual Studio Settings
+#------------------------------------------------------------------
+if (MSVC)
+    list(APPEND VAST_PAHO_DEFS -D_CRT_SECURE_NO_WARNINGS)
+    list(APPEND VAST_PAHO_DEFS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
+    list(APPEND VAST_PAHO_DEFS -D_CRT_NONSTDC_NO_DEPRECATE)
 endif ()
 
 #------------------------------------------------------------------
@@ -218,14 +248,14 @@ find_library(ESVM_LIBRARY
 message(STATUS "Found VA Smalltalk VM Library: ${ESVM_LIBRARY}")
 configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
 #-- On Windows, find VM dll dependency (esae40.dll) and copy to bin dir
-if(WIN32)
+if (WIN32)
     find_library(ESAE_LIBRARY
-        NAMES esae40
-        PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ESAE_LIBRARY}
-        NO_DEFAULT_PATH)
+            NAMES esae40
+            PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ESAE_LIBRARY}
+            NO_DEFAULT_PATH)
     message(STATUS "Found VA Smalltalk EBCDIC Library: ${ESAE_LIBRARY}")
     configure_file(${ESAE_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esae40.dll COPYONLY)
-endif()
+endif ()
 
 set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES} ${ES_INCLUDES})
 set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ESAE_LIBRARY} ${ESVM_LIBRARY})
@@ -233,6 +263,10 @@ set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ESAE_LIBRARY} ${ESVM_LIBRARY})
 #------------------------------------------------------------------
 # Build Instructions: Common
 #------------------------------------------------------------------
+
+#-- Add common defs
+add_definitions(${VAST_PAHO_DEFS})
+
 #-- Configure headers
 configure_file(
         ${ES_C_SRC_DIR}/EsMqttVersionInfo.h.in
