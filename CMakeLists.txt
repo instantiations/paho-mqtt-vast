@@ -6,25 +6,45 @@
 #  Contributors:
 #     Seth Berman - initial version
 #
-#  QUICK BUILD INSTRUCTIONS:
+#  Description:
+#     This file covers the build instructions for the entire project.
+#     In the future as complexity grows, a nested CMakeLists.txt approach
+#     may be taken.
 #
-#  Mingw-w64 (Windows)
-#  >mkdir build && cd build
-#  >cmake .. -G"MinGW Makefiles"
-#  >mingw32-make
-#  >mingw32-make test
+#     The layout of this file is logically organized as follows
+#     - Versioning
+#     - Options (i.e. Tests, Docs...)
+#     - General Compiler related setup
+#     - Common Project Source directory prefixes
+#     - 3rd-party modules
+#     - Common build instructions
+#     - Per-platform build instructions
+#     - Per-app build instructions
+#     - Unit testing
+#     - Documentation
 #
-#  Linux 64-bit (or Linux 32-bit on a 32-bit Linux OS)
-#  >mkdir build && cd build
-#  >cmake .. -G"Unix Makefiles"
-#  >make
-#  >make test
+#  Build Instrutions:
 #
-#  Linux 32-bit (cross-compile on 64-bit machine)
-#  >mkdir build && cd build
-#  >cmake .. -DES_64BIT=OFF -G"Unix Makefiles"
-#  >make
-#  >make test
+#     Mingw-w64 (Windows) (included some example build switches)
+#     >mkdir build && cd build
+#     >cmake .. -G"MinGW Makefiles" -DBUILD_DOCUMENTATION=ON -DBUILD_TESTING=ON
+#     >mingw32-make
+#     >mingw32-make test
+#     >mingw32-make docs
+#
+#     Linux 64-bit (or Linux 32-bit on a 32-bit Linux OS)
+#     >mkdir build && cd build
+#     >cmake .. -G"Unix Makefiles"
+#     >make
+#     >make test
+#     >make docs
+#
+#     Linux 32-bit (cross-compile on 64-bit machine)
+#     >mkdir build && cd build
+#     >cmake .. -DES_64BIT=OFF -G"Unix Makefiles"
+#     >make
+#     >make test
+#     >make docs
 #
 #*******************************************************************************/
 cmake_minimum_required(VERSION 3.0..3.13)
@@ -167,6 +187,8 @@ set(ES_C_LIB_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/lib)
 set(ES_C_LIB_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/lib)
 set(ES_C_TEST_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/test)
 set(ES_C_TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/test)
+set(ES_C_DOCS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/c/docs)
+set(ES_C_DOCS_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/docs)
 
 #------------------------------------------------------------------
 # 3rd Party Module: Plibsys
@@ -418,4 +440,26 @@ if (BUILD_TESTING)
     target_link_libraries(tests_esmqttlibrary ${VAST_PAHO_SYNC_CB_LIBS})
     add_test(NAME tests_esmqttlibrary COMMAND tests_esmqttlibrary)
     set_property(TARGET tests_esmqttlibrary PROPERTY PROJECT_LABEL "Tests_EsMqttLibrary")
+endif ()
+
+#------------------------------------------------------------------
+# C SOURCE DOCUMENTATION (DOXYGEN)
+#------------------------------------------------------------------
+if (BUILD_DOCUMENTATION)
+    find_package(Doxygen)
+    if (DOXYGEN_FOUND)
+        #-- Configure the Template Doxyfile for our specific project
+        configure_file(${ES_C_DOCS_SRC_DIR}/Doxyfile.in ${ES_C_DOCS_BIN_DIR}/Doxyfile @ONLY IMMEDIATE)
+        configure_file(${ES_C_DOCS_SRC_DIR}/vast_paho_mainpage.dox.in
+                ${ES_C_DOCS_BIN_DIR}/vast_paho_mainpage.dox @ONLY IMMEDIATE)
+
+        #-- Add a custom target to run Doxygen when ever the project is built
+        #-- IF we do want the documentation to be generated EVERY time we build the project
+        #-- then include the 'ALL' keyword after the target below i.e. ..._target (docs ALL).
+        add_custom_target(docs
+                COMMAND ${DOXYGEN_EXECUTABLE} ${ES_C_DOCS_BIN_DIR}/Doxyfile
+                SOURCES ${ES_C_DOCS_BIN_DIR}/Doxyfile)
+    else ()
+        message(STATUS "Doxygen is needed to build the documentation. Skipping docs target generation")
+    endif ()
 endif ()

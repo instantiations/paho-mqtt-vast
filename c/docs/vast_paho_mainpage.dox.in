@@ -1,0 +1,15 @@
+/****************************************************************************/
+/*! \mainpage Eclipse Paho Client for VA Smalltalk
+ * \section intro_sec Introduction
+ *
+ * This is the source documentation for the Eclipse Paho Client for VA Smalltalk
+ *
+ * @version     @ES_MQTT_VERSION_STR@
+ * @author      Seth Berman
+ * @company     Instantiations, Inc
+ *
+ * Copyright (c) 2019, <a href="http://www.instantiations.com">Instantiations, Inc</a><br>
+ * All rights reserved.
+ *
+ *
+ ****************************************************************************/
