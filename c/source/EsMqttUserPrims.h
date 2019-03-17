@@ -37,12 +37,12 @@
  * @brief Initialize the User-Prim module
  * @param globalInfo
  */
-void EsMqttUserPrimsInit(EsGlobalInfo *globalInfo);
+void EsMqttUserPrims_ModuleInit(EsGlobalInfo *globalInfo);
 
 /**
  * @brief Shutdown the User-Prim module
  */
-void EsMqttUserPrimsShutdown();
+void EsMqttUserPrims_ModuleShutdown();
 
 
 /************************************/

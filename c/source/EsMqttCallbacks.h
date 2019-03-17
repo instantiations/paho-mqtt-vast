@@ -66,12 +66,12 @@ enum EsMqttVastCallbackTypes {
  * @brief Initialize the Callback module
  * @param globalInfo
  */
-void EsMqttCallbacksInit(EsGlobalInfo *globalInfo);
+void EsMqttCallbacks_ModuleInit(EsGlobalInfo *globalInfo);
 
 /**
  * @brief Shutdown the User-Prim module
  */
-void EsMqttCallbacksShutdown();
+void EsMqttCallbacks_ModuleShutdown();
 
 /*************************/
 /*   C A L L B A C K S   */
@@ -82,7 +82,7 @@ void EsMqttCallbacksShutdown();
  * @param cbType EsMqttVastCallbackTypes
  * @return TRUE if valid, FALSE otherwise
  */
-ES_STATIC_INLINE BOOLEAN EsIsValidCallbackType(enum EsMqttVastCallbackTypes cbType) {
+ES_STATIC_INLINE BOOLEAN EsMqttCallbacks_IsValidCallbackType(enum EsMqttVastCallbackTypes cbType) {
     return (cbType >= MIN_MQTT_CALLBACKS && cbType < NUM_MQTT_CALLBACKS) ? TRUE : FALSE;
 }
 
@@ -92,7 +92,7 @@ ES_STATIC_INLINE BOOLEAN EsIsValidCallbackType(enum EsMqttVastCallbackTypes cbTy
  * @param target[out] contains callback address or NULL
  * @return TRUE if successful get, FALSE otherwise
  */
-BOOLEAN EsGetCallbackTarget(enum EsMqttVastCallbackTypes cbType, void **target);
+BOOLEAN EsMqttCallbacks_GetTarget(enum EsMqttVastCallbackTypes cbType, void **target);
 
 /**
  * @brief Register the receiver>>selector as async msg target for callback
@@ -102,7 +102,7 @@ BOOLEAN EsGetCallbackTarget(enum EsMqttVastCallbackTypes cbType, void **target);
  * @return address to callback function or NULL if none
  * @note Thread-safe.
  */
-void *EsRegisterCallback(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
+void *EsMqttCallbacks_Register(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
 
 
 #endif //ES_MQTT_CALLBACKS_H

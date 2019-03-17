@@ -28,11 +28,11 @@ static void copyMessageInto(MQTTClient_message *dest, MQTTClient_message *src) {
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
-void EsMqttAsyncArgumentsInit(EsGlobalInfo *globalInfo) {
+void EsMqttAsyncArguments_ModuleInit(EsGlobalInfo *globalInfo) {
     ES_UNUSED(globalInfo);
 }
 
-void EsMqttAsyncArgumentsShutdown() {
+void EsMqttAsyncArguments_ModuleShutdown() {
     /* No-Op */
 }
 

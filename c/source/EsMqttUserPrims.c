@@ -20,11 +20,11 @@
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
-void EsMqttUserPrimsInit(EsGlobalInfo *globalInfo) {
+void EsMqttUserPrims_ModuleInit(EsGlobalInfo *globalInfo) {
     ES_UNUSED(globalInfo);
 }
 
-void EsMqttUserPrimsShutdown() {
+void EsMqttUserPrims_ModuleShutdown() {
     // NO-OP
 }
 
@@ -50,7 +50,7 @@ EsUserPrimitive(MqttVastRegisterCallback) {
     cbReceiver = EsPrimArgument(2);
     cbSelector = EsPrimArgument(3);
 
-    funcAddr = EsRegisterCallback(cbType, cbReceiver, cbSelector);
+    funcAddr = EsMqttCallbacks_Register(cbType, cbReceiver, cbSelector);
     if (ES_LIKELY(funcAddr != NULL)) {
         EsMakePointerInteger((U_PTR) funcAddr, &cbAddress, EsPrimVMContext);
     } else {
@@ -79,8 +79,8 @@ EsUserPrimitive(MqttVastCheckpoint) {
     }
 
     id = EsSmallIntegerToI32(EsPrimArgument(1));
-    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_CHECKPOINT, 1, id);
-    rc = EsPostMessageToAsyncQueue(msg);
+    msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_CHECKPOINT, 1, id);
+    rc = EsMqttAsyncMessage_post(msg);
 
     EsPrimSucceedBoolean(rc);
 }

@@ -72,31 +72,12 @@ typedef struct _EsMqttAsyncMessage EsMqttAsyncMessage;
  * @brief Initialize the Async Queue Msg Module
  * @param globalInfo
  */
-void EsMqttAsyncMessagesInit(EsGlobalInfo *globalInfo);
+void EsMqttAsyncMessages_ModuleInit(EsGlobalInfo *globalInfo);
 
 /**
  * @brief Shutdown the Async Queue Msg Module
  */
-void EsMqttAsyncMessagesShutdown();
-
-/********************************/
-/*   A S Y N C  M E S S A G E   */
-/********************************/
-
-/**
- * @brief Answer a new async message to post
- * @param cbType MqttVastCallbackTypes
- * @param argCount um of msg args for variadic function
- * @param ... msg args to post
- * @return EsMqttAsyncMessage* or NULL if
- */
-EsMqttAsyncMessage *EsNewAsyncMessage(enum EsMqttVastCallbackTypes cbType, U_32 argCount, ...);
-
-/**
- * @brief Free the memory associated with the message
- * @param message
- */
-void EsFreeAsyncMessage(EsMqttAsyncMessage *message);
+void EsMqttAsyncMessages_ModuleShutdown();
 
 /***********************************************/
 /*   A S Y N C  M E S S A G E  T A R G E T S   */
@@ -109,7 +90,7 @@ void EsFreeAsyncMessage(EsMqttAsyncMessage *message);
  * @param selector[out] async msg target symbol selector
  * @return TRUE if successful get, FALSE otherwise
  */
-BOOLEAN EsGetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector);
+BOOLEAN EsMqttAsyncMessage_GetTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector);
 
 /**
  * @brief Set the Smalltalk receiver>>selector target for callback
@@ -118,7 +99,26 @@ BOOLEAN EsGetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *r
  * @param selector async msg target symbol selector
  * @return TRUE if successful set, FALSE otherwise
  */
-BOOLEAN EsSetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
+BOOLEAN EsMqttAsyncMessage_SetTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector);
+
+/********************************/
+/*   A S Y N C  M E S S A G E   */
+/********************************/
+
+/**
+ * @brief Answer a new async message to post
+ * @param cbType MqttVastCallbackTypes
+ * @param argCount um of msg args for variadic function
+ * @param ... msg args to post
+ * @return EsMqttAsyncMessage* or NULL if
+ */
+EsMqttAsyncMessage *EsMqttAsyncMessage_newInit(enum EsMqttVastCallbackTypes cbType, U_32 argCount, ...);
+
+/**
+ * @brief Free the memory associated with the message
+ * @param message
+ */
+void EsMqttAsyncMessage_free(EsMqttAsyncMessage *message);
 
 /*******************************************/
 /*   A S Y N C  M E S S A G E  Q U E U E   */
@@ -131,6 +131,6 @@ BOOLEAN EsSetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject re
  * @param message
  * @return TRUE if posted, FALSE otherwise (full queue)
  */
-BOOLEAN EsPostMessageToAsyncQueue(EsMqttAsyncMessage *message);
+BOOLEAN EsMqttAsyncMessage_post(EsMqttAsyncMessage *message);
 
 #endif //ES_MQTT_ASYNC_QUEUE_MESSAGES_H

@@ -16,8 +16,6 @@
 #include "EsMqttAsyncArguments.h"
 #include "EsWorkTask.h"
 
-#include <stdarg.h>
-
 /***************************/
 /*   P R O T O T Y P E S   */
 /***************************/
@@ -169,9 +167,9 @@ struct _EsMqttAsyncMessage {
  * @return TRUE if success, FALSE if overflow
  */
 static BOOLEAN hiLowFrom64(U_64 u64, I_32 *iHigh, I_32 *iLow) {
-    *iHigh = (I_32) (((u64) & 0x3FFFFFFF80000000LL) >> 31);
-    *iLow = (I_32) ((u64) & 0x7FFFFFFFLL);
-    return (BOOLEAN) ((u64 & 0xC000000000000000LL) == 0);
+    *iHigh = (I_32) (((u64) & 0x3FFFFFFF80000000UL) >> 31u);
+    *iLow = (I_32) ((u64) & 0x7FFFFFFFUL);
+    return (BOOLEAN) ((u64 & 0xC000000000000000UL) == 0);
 }
 
 /**
@@ -197,7 +195,8 @@ static BOOLEAN hiLowFromPointer(void *ptr, I_32 *iHigh, I_32 *iLow) {
  * @param selectorPtr [output]
  * @return TRUE if success, FALSE otherwise
  */
-static BOOLEAN getAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiverPtr, EsObject *selectorPtr) {
+static BOOLEAN
+getAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiverPtr, EsObject *selectorPtr) {
     if ((receiverPtr == NULL) || (selectorPtr == NULL)) {
         return FALSE;
     }
@@ -226,7 +225,7 @@ static BOOLEAN getAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObje
  * @param selector
  */
 static BOOLEAN setAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
-    if (EsIsValidCallbackType(cbType)) {
+    if (EsMqttCallbacks_IsValidCallbackType(cbType)) {
         /* WRITE LOCK */
         p_rwlock_writer_lock(_AsyncMessageTargetsLock);
         _AsyncMessageTargets[cbType * 2] = receiver;
@@ -248,7 +247,7 @@ static BOOLEAN setAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObje
 static BOOLEAN getAsyncMessageHandler(enum EsMqttVastCallbackTypes cbType, AsyncMessageHandlerFunc *handlerPtr) {
     if (handlerPtr == NULL) {
         return FALSE;
-    } else if (EsIsValidCallbackType(cbType)) {
+    } else if (EsMqttCallbacks_IsValidCallbackType(cbType)) {
         *handlerPtr = _AsyncMessageHandlers[cbType];
         return TRUE;
     } else {
@@ -406,7 +405,7 @@ static void submitToAsyncQueue(EsWorkTask *task) {
 
     /* Get valid receiver>>selector */
     if (!getAsyncMessageTarget(msg->cbType, &receiver, &selector)) {
-        EsFreeAsyncMessage(msg);
+        EsMqttAsyncMessage_free(msg);
         EsWorkTask_free(task);
     }
 
@@ -425,16 +424,16 @@ static void submitToAsyncQueue(EsWorkTask *task) {
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
-void EsMqttAsyncMessagesInit(EsGlobalInfo *globalInfo) {
+void EsMqttAsyncMessages_ModuleInit(EsGlobalInfo *globalInfo) {
     _DummyVMContext.globalInfo = globalInfo;
     _AsyncMessageTargetsLock = p_rwlock_new();
 }
 
-void EsMqttAsyncMessagesShutdown() {
+void EsMqttAsyncMessages_ModuleShutdown() {
     _DummyVMContext.globalInfo = NULL;
 }
 
-EsMqttAsyncMessage *EsNewAsyncMessage(enum EsMqttVastCallbackTypes cbType, U_32 argCount, ...) {
+EsMqttAsyncMessage *EsMqttAsyncMessage_newInit(enum EsMqttVastCallbackTypes cbType, U_32 argCount, ...) {
     EsMqttAsyncMessage *msg;
     va_list argsList;
 
@@ -511,7 +510,7 @@ EsMqttAsyncMessage *EsNewAsyncMessage(enum EsMqttVastCallbackTypes cbType, U_32 
     return msg;
 }
 
-void EsFreeAsyncMessage(EsMqttAsyncMessage *message) {
+void EsMqttAsyncMessage_free(EsMqttAsyncMessage *message) {
     if (message) {
         if (message->args) {
             EsFreeMemory(message->args);
@@ -520,16 +519,16 @@ void EsFreeAsyncMessage(EsMqttAsyncMessage *message) {
     }
 }
 
-BOOLEAN EsGetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector) {
+BOOLEAN EsMqttAsyncMessage_GetTarget(enum EsMqttVastCallbackTypes cbType, EsObject *receiver, EsObject *selector) {
     return getAsyncMessageTarget(cbType, receiver, selector);
 }
 
-BOOLEAN EsSetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
+BOOLEAN EsMqttAsyncMessage_SetTarget(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
     return setAsyncMessageTarget(cbType, receiver, selector);
 }
 
 
-BOOLEAN EsPostMessageToAsyncQueue(EsMqttAsyncMessage *message) {
+BOOLEAN EsMqttAsyncMessage_post(EsMqttAsyncMessage *message) {
     EsWorkTask *task;
 
     task = EsWorkTask_newInit(submitToAsyncQueue, message);

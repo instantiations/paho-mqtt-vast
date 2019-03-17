@@ -22,32 +22,32 @@
 /**
  * @brief Boolean to check if the module is initialized
  */
-static volatile I_32 _LibraryState = 0;
+static volatile I_32 _State = 0;
 
 /******************************************************/
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
 void EsMqttLibraryInit(EsGlobalInfo *globalInfo) {
-    if (p_atomic_int_compare_and_exchange(&_LibraryState, ESMQTT_LIBRARY_UNINIT, ESMQTT_LIBRARY_INIT)) {
+    if (p_atomic_int_compare_and_exchange(&_State, ESMQTT_LIBRARY_UNINIT, ESMQTT_LIBRARY_INIT)) {
         p_libsys_init();
-        EsMqttAsyncArgumentsInit(globalInfo);
-        EsMqttAsyncMessagesInit(globalInfo);
-        EsMqttCallbacksInit(globalInfo);
-        EsMqttUserPrimsInit(globalInfo);
+        EsMqttAsyncArguments_ModuleInit(globalInfo);
+        EsMqttAsyncMessages_ModuleInit(globalInfo);
+        EsMqttCallbacks_ModuleInit(globalInfo);
+        EsMqttUserPrims_ModuleInit(globalInfo);
     }
 }
 
 void EsMqttLibraryShutdown() {
-    if (p_atomic_int_compare_and_exchange(&_LibraryState, ESMQTT_LIBRARY_INIT, ESMQTT_LIBRARY_SHUTDOWN)) {
-        EsMqttAsyncArgumentsShutdown();
-        EsMqttAsyncMessagesShutdown();
-        EsMqttCallbacksShutdown();
-        EsMqttUserPrimsShutdown();
+    if (p_atomic_int_compare_and_exchange(&_State, ESMQTT_LIBRARY_INIT, ESMQTT_LIBRARY_SHUTDOWN)) {
+        EsMqttAsyncArguments_ModuleShutdown();
+        EsMqttAsyncMessages_ModuleShutdown();
+        EsMqttCallbacks_ModuleShutdown();
+        EsMqttUserPrims_ModuleShutdown();
         p_libsys_shutdown();
     }
 }
 
-I_32 EsMqttGetLibraryState() {
-    return _LibraryState;
+I_32 EsMqttLibrary_GetState() {
+    return _State;
 }

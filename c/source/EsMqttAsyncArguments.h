@@ -34,12 +34,12 @@
  * @param EsGlobalInfo
  * @note No-Op if already init, can call multiple times
  */
-void EsMqttAsyncArgumentsInit(EsGlobalInfo *globalInfo);
+void EsMqttAsyncArguments_ModuleInit(EsGlobalInfo *globalInfo);
 
 /**
  * @brief Destruct and clear library module state
  */
-void EsMqttAsyncArgumentsShutdown();
+void EsMqttAsyncArguments_ModuleShutdown();
 
 /*************************************/
 /*   M Q T T  D A T A  C O P I E S   */

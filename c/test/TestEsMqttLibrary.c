@@ -13,11 +13,11 @@
 static pboolean test_initShutdown() {
     EsGlobalInfo globalInfo;
 
-    ES_ASSERT(EsMqttGetLibraryState() == ESMQTT_LIBRARY_UNINIT);
+    ES_ASSERT(EsMqttLibrary_GetState() == ESMQTT_LIBRARY_UNINIT);
     EsMqttLibraryInit(&globalInfo);
-    ES_ASSERT(EsMqttGetLibraryState() == ESMQTT_LIBRARY_INIT);
+    ES_ASSERT(EsMqttLibrary_GetState() == ESMQTT_LIBRARY_INIT);
     EsMqttLibraryShutdown();
-    ES_ASSERT(EsMqttGetLibraryState() == ESMQTT_LIBRARY_SHUTDOWN);
+    ES_ASSERT(EsMqttLibrary_GetState() == ESMQTT_LIBRARY_SHUTDOWN);
     return TRUE;
 }
 

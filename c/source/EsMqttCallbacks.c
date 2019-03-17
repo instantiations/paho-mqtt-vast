@@ -15,9 +15,6 @@
 #include "EsMqttCallbacks.h"
 #include "EsMqttAsyncMessages.h"
 
-#include <string.h>
-#include <stdlib.h>
-
 /***************************/
 /*   P R O T O T Y P E S   */
 /***************************/
@@ -121,7 +118,7 @@ static BOOLEAN getCallbackTarget(enum EsMqttVastCallbackTypes cbType, void **tar
     BOOLEAN result = FALSE;
 
     if (target != NULL) {
-        if (EsIsValidCallbackType(cbType)) {
+        if (EsMqttCallbacks_IsValidCallbackType(cbType)) {
             *target = _CallbackTargets[cbType];
             result = TRUE;
         } else {
@@ -139,27 +136,27 @@ static BOOLEAN getCallbackTarget(enum EsMqttVastCallbackTypes cbType, void **tar
 static void traceCallback(I_32 level, char *message) {
     EsMqttAsyncMessage *msg = NULL;
 
-    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_TRACE, 2, level, message);
+    msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_TRACE, 2, level, message);
     if (msg != NULL) {
-        EsPostMessageToAsyncQueue(msg);
+        EsMqttAsyncMessage_post(msg);
     }
 }
 
 static void connectionLostCallback(void *context, char *cause) {
     EsMqttAsyncMessage *msg = NULL;
 
-    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_CONNECTIONLOST, 2, context, cause);
+    msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_CONNECTIONLOST, 2, context, cause);
     if (msg != NULL) {
-        EsPostMessageToAsyncQueue(msg);
+        EsMqttAsyncMessage_post(msg);
     }
 }
 
 static void disconnectedCallback(void *context, MQTTProperties *properties, enum MQTTReasonCodes reasonCode) {
     EsMqttAsyncMessage *msg = NULL;
 
-    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_DISCONNECTED, 3, context, context, properties, reasonCode);
+    msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_DISCONNECTED, 3, context, context, properties, reasonCode);
     if (msg != NULL) {
-        EsPostMessageToAsyncQueue(msg);
+        EsMqttAsyncMessage_post(msg);
     }
 }
 
@@ -167,9 +164,9 @@ static I_32 messageArrivedCallback(void *context, char *topicName, I_32 topicLen
     EsMqttAsyncMessage *msg = NULL;
     I_32 result = 0;
 
-    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_MESSAGEARRIVED, 4, context, topicName, topicLen, message);
+    msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_MESSAGEARRIVED, 4, context, topicName, topicLen, message);
     if (msg != NULL) {
-        result = EsPostMessageToAsyncQueue(msg) ? 1 : 0;
+        result = EsMqttAsyncMessage_post(msg) ? 1 : 0;
     }
     return result;
 }
@@ -177,9 +174,9 @@ static I_32 messageArrivedCallback(void *context, char *topicName, I_32 topicLen
 static void deliveryCompleteCallback(void *context, MQTTClient_deliveryToken token) {
     EsMqttAsyncMessage *msg = NULL;
 
-    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_DELIVERYCOMPLETE, 2, context, token);
+    msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_DELIVERYCOMPLETE, 2, context, token);
     if (msg != NULL) {
-        EsPostMessageToAsyncQueue(msg);
+        EsMqttAsyncMessage_post(msg);
     }
 }
 
@@ -187,9 +184,9 @@ static void publishedCallback(void *context, I_32 dt, I_32 packet_type, MQTTProp
                               enum MQTTReasonCodes reasonCode) {
     EsMqttAsyncMessage *msg = NULL;
 
-    msg = EsNewAsyncMessage(ESMQTT_CB_TYPE_PUBLISHED, 5, context, dt, packet_type, properties, reasonCode);
+    msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_PUBLISHED, 5, context, dt, packet_type, properties, reasonCode);
     if (msg != NULL) {
-        EsPostMessageToAsyncQueue(msg);
+        EsMqttAsyncMessage_post(msg);
     }
 }
 
@@ -201,22 +198,22 @@ static void dummyCheckpointCallback(I_32 id) {
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
-void EsMqttCallbacksInit(EsGlobalInfo *globalInfo) {
+void EsMqttCallbacks_ModuleInit(EsGlobalInfo *globalInfo) {
     ES_UNUSED(globalInfo);
 }
 
-void EsMqttCallbacksShutdown() {
+void EsMqttCallbacks_ModuleShutdown() {
     /* No-Op */
 }
 
-BOOLEAN EsGetCallbackTarget(enum EsMqttVastCallbackTypes cbType, void **target) {
+BOOLEAN EsMqttCallbacks_GetTarget(enum EsMqttVastCallbackTypes cbType, void **target) {
     return getCallbackTarget(cbType, target);
 }
 
-void *EsRegisterCallback(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
+void *EsMqttCallbacks_Register(enum EsMqttVastCallbackTypes cbType, EsObject receiver, EsObject selector) {
     void *funcAddr = NULL;
 
-    if (EsSetAsyncMessageTarget(cbType, receiver, selector) == TRUE) {
+    if (EsMqttAsyncMessage_SetTarget(cbType, receiver, selector) == TRUE) {
         getCallbackTarget(cbType, &funcAddr);
     }
     return funcAddr;

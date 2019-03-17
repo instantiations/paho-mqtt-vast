@@ -22,7 +22,7 @@
 /**
  * @brief Library States
  *
- * The module state lifecyle is
+ * The module state lifecycle is
  * UNITIT -> INIT -> SHUTDOWN
  */
 static const I_32 ESMQTT_LIBRARY_UNINIT	= 0;
@@ -53,6 +53,6 @@ void EsMqttLibraryShutdown();
  * @see Library State Constants above
  * @return Library State
  */
-I_32 EsMqttGetLibraryState();
+I_32 EsMqttLibrary_GetState();
 
 #endif //ES_MQTT_LIBRARY_H
