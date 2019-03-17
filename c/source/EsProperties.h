@@ -20,7 +20,7 @@
  *  char *value = EsProperties_at(p, "key");
  *
  *  Sequenceable Interface:
- *  U_32 totalNum = EsProperties_getSizep);
+ *  U_32 totalNum = EsProperties_getSize();
  *  EsPropertyPair pair;
  *  for(i = 0; i < totalNum; i++) {
  *      EsProperties_atIndex(p, i, &pair);
