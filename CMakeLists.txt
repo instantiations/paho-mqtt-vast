@@ -292,6 +292,18 @@ set(VAST_SOURCES
         ${ES_C_SRC_DIR}/EsWorkTask.h
         ${ES_C_SRC_DIR}/EsWorkTask.c)
 
+set(VAST_PAHO_SOURCES
+        ${VAST_SOURCES}
+        ${ES_C_SRC_DIR}/EsMqttAsyncArguments.h
+        ${ES_C_SRC_DIR}/EsMqttAsyncArguments.c
+        ${ES_C_SRC_DIR}/EsMqttAsyncMessages.h
+        ${ES_C_SRC_DIR}/EsMqttAsyncMessages.c
+        ${ES_C_SRC_DIR}/EsMqttCallbacks.h
+        ${ES_C_SRC_DIR}/EsMqttCallbacks.c
+        ${ES_C_SRC_DIR}/EsMqttLibrary.h
+        ${ES_C_SRC_DIR}/EsMqttLibrary.c
+        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
+
 #-- Platform Flags
 if (WIN32 AND NOT CYGWIN)
     add_definitions(-DWINDOWS)
@@ -326,18 +338,9 @@ include_directories(${VAST_PAHO_INCLUDES})
 # Build Instructions: C Library for VA Smalltalk Eclipse Paho Sync Callbacks
 #----------------------------------------------------------------------------
 set(VAST_PAHO_SYNC_CB_SOURCES
-        ${VAST_SOURCES}
-        ${ES_C_SRC_DIR}/EsMqttAsyncArguments.h
-        ${ES_C_SRC_DIR}/EsMqttAsyncArguments.c
-        ${ES_C_SRC_DIR}/EsMqttAsyncMessages.h
-        ${ES_C_SRC_DIR}/EsMqttAsyncMessages.c
-        ${ES_C_SRC_DIR}/EsMqttCallbacks.h
-        ${ES_C_SRC_DIR}/EsMqttCallbacks.c
-        ${ES_C_SRC_DIR}/EsMqttLibrary.h
-        ${ES_C_SRC_DIR}/EsMqttLibrary.c
+        ${VAST_PAHO_SOURCES}
         ${ES_C_SRC_DIR}/EsMqttUserPrims.h
-        ${ES_C_SRC_DIR}/EsMqttUserPrims.c
-        ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
+        ${ES_C_SRC_DIR}/EsMqttUserPrims.c)
 
 #-- Add the platform specific subdirectory
 if (WIN32 AND NOT CYGWIN)
@@ -413,14 +416,7 @@ if (BUILD_TESTING)
     #-- Tests: EsMqttLibrary
     add_executable(tests_esmqttlibrary
             ${ES_C_TEST_SRC_DIR}/TestEsMqttLibrary.c
-            ${ES_C_SRC_DIR}/EsProperties.c
-            ${ES_C_SRC_DIR}/EsWorkTask.c
-            ${ES_C_SRC_DIR}/EsMqttCallbacks.c
-            ${ES_C_SRC_DIR}/EsMqttAsyncMessages.c
-            ${ES_C_SRC_DIR}/EsMqttAsyncArguments.c
-            ${ES_C_SRC_DIR}/EsMqttUserPrims.c
-            ${ES_C_SRC_DIR}/EsMqttLibrary.c
-            ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
+            ${VAST_PAHO_SOURCES})
     add_dependencies(tests_esmqttlibrary ${VAST_PAHO_DEPS})
     target_link_libraries(tests_esmqttlibrary ${VAST_PAHO_SYNC_CB_LIBS})
     add_test(NAME tests_esmqttlibrary COMMAND tests_esmqttlibrary)

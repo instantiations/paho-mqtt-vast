@@ -29,22 +29,6 @@
 
 #include "esuser.h"
 
-/***********************************/
-/*   S E T U P / S H U T D O W N   */
-/***********************************/
-
-/**
- * @brief Initialize the User-Prim module
- * @param globalInfo
- */
-void EsMqttUserPrims_ModuleInit(EsGlobalInfo *globalInfo);
-
-/**
- * @brief Shutdown the User-Prim module
- */
-void EsMqttUserPrims_ModuleShutdown();
-
-
 /************************************/
 /*   U S E R  P R I M I T I V E S   */
 /************************************/

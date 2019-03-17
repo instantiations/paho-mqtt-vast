@@ -34,7 +34,6 @@ void EsMqttLibraryInit(EsGlobalInfo *globalInfo) {
         EsMqttAsyncArguments_ModuleInit(globalInfo);
         EsMqttAsyncMessages_ModuleInit(globalInfo);
         EsMqttCallbacks_ModuleInit(globalInfo);
-        EsMqttUserPrims_ModuleInit(globalInfo);
     }
 }
 
@@ -43,7 +42,6 @@ void EsMqttLibraryShutdown() {
         EsMqttAsyncArguments_ModuleShutdown();
         EsMqttAsyncMessages_ModuleShutdown();
         EsMqttCallbacks_ModuleShutdown();
-        EsMqttUserPrims_ModuleShutdown();
         p_libsys_shutdown();
     }
 }

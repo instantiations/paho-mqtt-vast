@@ -20,14 +20,6 @@
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
-void EsMqttUserPrims_ModuleInit(EsGlobalInfo *globalInfo) {
-    ES_UNUSED(globalInfo);
-}
-
-void EsMqttUserPrims_ModuleShutdown() {
-    // NO-OP
-}
-
 EsUserPrimitive(EsMqttVastRegisterCallback) {
     I_32 cbType;
     void *funcAddr = NULL;
