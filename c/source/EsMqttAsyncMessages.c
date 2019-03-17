@@ -399,7 +399,7 @@ static void submitToAsyncQueue(EsWorkTask *task) {
     AsyncMessageHandlerFunc handler;
     EsMqttAsyncMessage *msg;
 
-    msg = (EsMqttAsyncMessage *) EsGetWorkTaskData(task);
+    msg = (EsMqttAsyncMessage *) EsWorkTask_getUserData(task);
     if (!msg) {
         return;
     }
@@ -407,7 +407,7 @@ static void submitToAsyncQueue(EsWorkTask *task) {
     /* Get valid receiver>>selector */
     if (!getAsyncMessageTarget(msg->cbType, &receiver, &selector)) {
         EsFreeAsyncMessage(msg);
-        EsFreeWorkTask(task);
+        EsWorkTask_free(task);
     }
 
     msg->receiver = receiver;
@@ -532,11 +532,11 @@ BOOLEAN EsSetAsyncMessageTarget(enum EsMqttVastCallbackTypes cbType, EsObject re
 BOOLEAN EsPostMessageToAsyncQueue(EsMqttAsyncMessage *message) {
     EsWorkTask *task;
 
-    task = EsNewWorkTaskInit(submitToAsyncQueue, message);
+    task = EsWorkTask_newInit(submitToAsyncQueue, message);
     if (!task) {
         return FALSE;
     }
 
-    EsRunWorkTask(task);
+    EsWorkTask_run(task);
     return TRUE;
 }

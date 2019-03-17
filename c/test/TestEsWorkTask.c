@@ -15,7 +15,7 @@ static pboolean FreeFuncCalled = FALSE;
  * @param task
  */
 static void counterWorkTaskFunc(EsWorkTask *task) {
-    U_PTR incAmount = (U_PTR) EsGetWorkTaskData(task);
+    U_PTR incAmount = (U_PTR) EsWorkTask_getUserData(task);
     Counter += incAmount;
 }
 
@@ -39,17 +39,17 @@ static void noOpFreeWorkTaskDataFunc(void *data) {
 static pboolean test_newFree() {
     EsWorkTask *task;
 
-    task = EsNewWorkTask();
+    task = EsWorkTask_new();
 
     FreeFuncCalled = 0;
     ES_DENY(FreeFuncCalled);
-    EsFreeWorkTask(task);
+    EsWorkTask_free(task);
     ES_DENY(FreeFuncCalled);
 
-    task = EsNewWorkTaskInit(counterWorkTaskFunc, (void *) (U_PTR) 5);
-    ES_ASSERT(EsGetWorkTaskFunc(task) == counterWorkTaskFunc);
-    ES_ASSERT(EsGetWorkTaskData(task) == (void*)(U_PTR)5);
-    EsFreeWorkTask(task);
+    task = EsWorkTask_newInit(counterWorkTaskFunc, (void *) (U_PTR) 5);
+    ES_ASSERT(EsWorkTask_getRunFunc(task) == counterWorkTaskFunc);
+    ES_ASSERT(EsWorkTask_getUserData(task) == (void *) (U_PTR) 5);
+    EsWorkTask_free(task);
 
     return TRUE;
 }
@@ -62,28 +62,28 @@ static pboolean test_accessors() {
     EsWorkTask *task;
     void *arg;
 
-    task = EsNewWorkTaskInit(NULL, NULL);
+    task = EsWorkTask_newInit(NULL, NULL);
     ES_ASSERT(task != NULL);
-    ES_ASSERT(EsGetWorkTaskFunc(task) == NULL);
-    ES_ASSERT(EsGetWorkTaskData(task) == NULL);
-    ES_ASSERT(EsGetWorkTaskFreeDataFunc(task) == NULL);
+    ES_ASSERT(EsWorkTask_getRunFunc(task) == NULL);
+    ES_ASSERT(EsWorkTask_getUserData(task) == NULL);
+    ES_ASSERT(EsWorkTask_getFreeUserDataFunc(task) == NULL);
 
     arg = (void *) (U_PTR) 5;
-    EsSetWorkTaskFunc(task, counterWorkTaskFunc);
-    EsSetWorkTaskData(task, arg);
-    EsSetWorkTaskFreeDataFunc(task, noOpFreeWorkTaskDataFunc);
-    ES_ASSERT(EsGetWorkTaskFunc(task) == counterWorkTaskFunc);
-    ES_ASSERT(EsGetWorkTaskData(task) == arg)
-    ES_ASSERT(EsGetWorkTaskFreeDataFunc(task) == noOpFreeWorkTaskDataFunc);
+    EsWorkTask_setRunFunc(task, counterWorkTaskFunc);
+    EsWorkTask_setUserData(task, arg);
+    EsWorkTask_setFreeUserDataFunc(task, noOpFreeWorkTaskDataFunc);
+    ES_ASSERT(EsWorkTask_getRunFunc(task) == counterWorkTaskFunc);
+    ES_ASSERT(EsWorkTask_getUserData(task) == arg)
+    ES_ASSERT(EsWorkTask_getFreeUserDataFunc(task) == noOpFreeWorkTaskDataFunc);
 
-    EsSetWorkTaskFunc(task, NULL);
-    EsSetWorkTaskData(task, NULL);
-    ES_ASSERT(EsGetWorkTaskFunc(task) == NULL);
-    ES_ASSERT(EsGetWorkTaskData(task) == NULL);
+    EsWorkTask_setRunFunc(task, NULL);
+    EsWorkTask_setUserData(task, NULL);
+    ES_ASSERT(EsWorkTask_getRunFunc(task) == NULL);
+    ES_ASSERT(EsWorkTask_getUserData(task) == NULL);
 
     FreeFuncCalled = FALSE;
     ES_DENY(FreeFuncCalled);
-    EsFreeWorkTask(task);
+    EsWorkTask_free(task);
     ES_ASSERT(FreeFuncCalled);
 
     return TRUE;
@@ -99,13 +99,13 @@ static pboolean test_properties() {
 
     /* Test against null task */
     task = NULL;
-    ES_ASSERT(EsGetWorkTaskProps(task) == NULL);
+    ES_ASSERT(EsWorkTask_getProperties(task) == NULL);
 
-    task = EsNewWorkTask();
-    props = EsGetWorkTaskProps(task);
-    ES_ASSERT(EsNumProperties(props) == 0);
+    task = EsWorkTask_new();
+    props = EsWorkTask_getProperties(task);
+    ES_ASSERT(EsProperties_getSize(props) == 0);
 
-    EsFreeWorkTask(task);
+    EsWorkTask_free(task);
 
     return TRUE;
 }
@@ -121,10 +121,10 @@ static pboolean test_run() {
 
     Counter = 0;
     arg = (void *) (U_PTR) 5;
-    task = EsNewWorkTaskInit(counterWorkTaskFunc, arg);
-    EsRunWorkTask(task);
+    task = EsWorkTask_newInit(counterWorkTaskFunc, arg);
+    EsWorkTask_run(task);
     ES_ASSERT(Counter == (U_PTR) arg);
-    EsFreeWorkTask(task);
+    EsWorkTask_free(task);
 
     return TRUE;
 }

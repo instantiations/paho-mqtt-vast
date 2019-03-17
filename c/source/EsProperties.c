@@ -23,13 +23,9 @@
 /**************************/
 
 /**
- * @brief Property Node for properties container
- */
-typedef struct _EsProperty EsProperty;
-
-/**
  * @brief Property Node for properties linked list
  */
+typedef struct _EsProperty EsProperty;
 struct _EsProperty {
     const char *key;
     char *value;
@@ -111,11 +107,11 @@ static EsProperty *propertyNodeAt(const EsProperties *props, const char *key) {
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
-EsProperties *EsNewProperties() {
+EsProperties *EsProperties_new() {
     return (EsProperties *) calloc(1, sizeof(EsProperties));
 }
 
-void EsFreeProperties(EsProperties *props) {
+void EsProperties_free(EsProperties *props) {
     if (props != NULL) {
         EsProperty *curr = props->head;
         while (curr != NULL) {
@@ -128,7 +124,7 @@ void EsFreeProperties(EsProperties *props) {
     }
 }
 
-U_32 EsNumProperties(const EsProperties *props) {
+U_32 EsProperties_getSize(const EsProperties *props) {
     U_32 numProps = 0;
 
     if (props != NULL) {
@@ -141,7 +137,7 @@ U_32 EsNumProperties(const EsProperties *props) {
     return numProps;
 }
 
-void EsPropertyPairAtIndex(const EsProperties *props, U_32 index, EsPropertyPair *const pair) {
+void EsProperties_atIndex(const EsProperties *props, U_32 index, EsPropertyPair *pair) {
     EsProperty *curr = NULL;
     U_32 i;
 
@@ -165,14 +161,14 @@ void EsPropertyPairAtIndex(const EsProperties *props, U_32 index, EsPropertyPair
     }
 }
 
-const char *EsPropertyAt(const EsProperties *props, const char *key) {
+const char *EsProperties_at(const EsProperties *props, const char *key) {
     EsProperty *node = NULL;
 
     node = propertyNodeAt(props, key);
     return (node != NULL) ? node->value : NULL;
 }
 
-void EsPropertyAtPut(EsProperties *props, const char *key, char *value) {
+void EsProperties_atPut(EsProperties *props, const char *key, char *value) {
     if (props != NULL && key != NULL && value != NULL) {
         EsProperty *node = propertyNodeAt(props, key);
         if (node != NULL) {
@@ -194,11 +190,11 @@ void EsPropertyAtPut(EsProperties *props, const char *key, char *value) {
     }
 }
 
-BOOLEAN EsPropertyIncludesKey(const EsProperties *props, const char *key) {
-    return (EsPropertyAt(props, key) != NULL) ? TRUE : FALSE;
+BOOLEAN EsProperties_includesKey(const EsProperties *props, const char *key) {
+    return (EsProperties_at(props, key) != NULL) ? TRUE : FALSE;
 }
 
-char *EsPropertyRemoveKey(EsProperties *props, const char *key) {
+char *EsProperties_removeKey(EsProperties *props, const char *key) {
     char *value = NULL;
 
     EsProperty *node = propertyNodeAt(props, key);
@@ -216,10 +212,10 @@ char *EsPropertyRemoveKey(EsProperties *props, const char *key) {
     return value;
 }
 
-BOOLEAN EsPropertyValueIs(const EsProperties *props, const char *key, const char *value) {
+BOOLEAN EsProperties_valueEquals(const EsProperties *props, const char *key, const char *value) {
     const char *result = NULL;
 
-    result = EsPropertyAt(props, key);
+    result = EsProperties_at(props, key);
     return (result != NULL && value != NULL) ? STREQ(result, value) : FALSE;
 }
 

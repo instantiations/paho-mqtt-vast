@@ -13,9 +13,9 @@
 static pboolean test_newFree() {
     EsProperties *props;
 
-    props = EsNewProperties();
+    props = EsProperties_new();
     ES_ASSERT(props != NULL);
-    EsFreeProperties(props);
+    EsProperties_free(props);
 
     return TRUE;
 }
@@ -27,109 +27,109 @@ static pboolean test_properties() {
 
     /* Test against null props */
     props = NULL;
-    ES_ASSERT(EsNumProperties(props) == 0);
-    ES_ASSERT(EsPropertyIncludesKey(props, NULL) == FALSE);
-    ES_ASSERT(EsPropertyAt(props, NULL) == NULL);
-    EsPropertyAtPut(props, NULL, NULL);
-    ES_ASSERT(EsPropertyValueIs(props, NULL, NULL) == FALSE);
-    ES_ASSERT(EsPropertyRemoveKey(props, NULL) == NULL);
-    EsPropertyPairAtIndex(props, 0, &pair);
+    ES_ASSERT(EsProperties_getSize(props) == 0);
+    ES_ASSERT(EsProperties_includesKey(props, NULL) == FALSE);
+    ES_ASSERT(EsProperties_at(props, NULL) == NULL);
+    EsProperties_atPut(props, NULL, NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, NULL, NULL) == FALSE);
+    ES_ASSERT(EsProperties_removeKey(props, NULL) == NULL);
+    EsProperties_atIndex(props, 0, &pair);
     ES_ASSERT(pair.key == NULL);
     ES_ASSERT(pair.value == NULL);
 
-    props = EsNewProperties();
+    props = EsProperties_new();
 
     /* Test against null args */
-    ES_ASSERT(EsNumProperties(props) == 0);
-    ES_ASSERT(EsPropertyIncludesKey(props, NULL) == FALSE);
-    ES_ASSERT(EsPropertyAt(props, NULL) == NULL);
-    EsPropertyAtPut(props, NULL, NULL);
-    ES_ASSERT(EsPropertyValueIs(props, NULL, NULL) == FALSE);
-    ES_ASSERT(EsPropertyRemoveKey(props, NULL) == NULL);
-    EsPropertyPairAtIndex(props, 0, NULL);
+    ES_ASSERT(EsProperties_getSize(props) == 0);
+    ES_ASSERT(EsProperties_includesKey(props, NULL) == FALSE);
+    ES_ASSERT(EsProperties_at(props, NULL) == NULL);
+    EsProperties_atPut(props, NULL, NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, NULL, NULL) == FALSE);
+    ES_ASSERT(EsProperties_removeKey(props, NULL) == NULL);
+    EsProperties_atIndex(props, 0, NULL);
 
     /* Test empty prop props / valid keys */
-    ES_ASSERT(EsNumProperties(props) == 0);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
-    ES_ASSERT(EsPropertyAt(props, "Key") == NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key", "Value") == FALSE);
+    ES_ASSERT(EsProperties_getSize(props) == 0);
+    ES_ASSERT(EsProperties_includesKey(props, "Key") == FALSE);
+    ES_ASSERT(EsProperties_at(props, "Key") == NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key", "Value") == FALSE);
 
     /* Add key */
-    EsPropertyAtPut(props, "Key", "Value");
-    ES_ASSERT(EsNumProperties(props) == 1);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key") == TRUE);
-    ES_ASSERT(EsPropertyAt(props, "Key") != NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key", "Value"));
-    EsPropertyPairAtIndex(props, 0, &pair);
+    EsProperties_atPut(props, "Key", "Value");
+    ES_ASSERT(EsProperties_getSize(props) == 1);
+    ES_ASSERT(EsProperties_includesKey(props, "Key") == TRUE);
+    ES_ASSERT(EsProperties_at(props, "Key") != NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key", "Value"));
+    EsProperties_atIndex(props, 0, &pair);
     ES_ASSERT(strcmp(pair.key, "Key") == 0);
     ES_ASSERT(strcmp(pair.value, "Value") == 0)
-    EsPropertyPairAtIndex(props, 1, &pair);
+    EsProperties_atIndex(props, 1, &pair);
     ES_ASSERT(pair.key == NULL);
     ES_ASSERT(pair.value == NULL);
 
     /* Add second key */
-    EsPropertyAtPut(props, "Key2", "Value2");
-    ES_ASSERT(EsNumProperties(props) == 2);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key") == TRUE);
-    ES_ASSERT(EsPropertyAt(props, "Key") != NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key", "Value"));
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == TRUE);
-    ES_ASSERT(EsPropertyAt(props, "Key2") != NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key2", "Value2"));
+    EsProperties_atPut(props, "Key2", "Value2");
+    ES_ASSERT(EsProperties_getSize(props) == 2);
+    ES_ASSERT(EsProperties_includesKey(props, "Key") == TRUE);
+    ES_ASSERT(EsProperties_at(props, "Key") != NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key", "Value"));
+    ES_ASSERT(EsProperties_includesKey(props, "Key2") == TRUE);
+    ES_ASSERT(EsProperties_at(props, "Key2") != NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key2", "Value2"));
 
     /* Add third key */
-    EsPropertyAtPut(props, "Key3", "Value3");
-    ES_ASSERT(EsNumProperties(props) == 3);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key") == TRUE);
-    ES_ASSERT(EsPropertyAt(props, "Key") != NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key", "Value"));
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == TRUE);
-    ES_ASSERT(EsPropertyAt(props, "Key2") != NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key2", "Value2"));
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key3") == TRUE);
-    ES_ASSERT(EsPropertyAt(props, "Key3") != NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key3", "Value3"));
-    EsPropertyPairAtIndex(props, 2, &pair);
+    EsProperties_atPut(props, "Key3", "Value3");
+    ES_ASSERT(EsProperties_getSize(props) == 3);
+    ES_ASSERT(EsProperties_includesKey(props, "Key") == TRUE);
+    ES_ASSERT(EsProperties_at(props, "Key") != NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key", "Value"));
+    ES_ASSERT(EsProperties_includesKey(props, "Key2") == TRUE);
+    ES_ASSERT(EsProperties_at(props, "Key2") != NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key2", "Value2"));
+    ES_ASSERT(EsProperties_includesKey(props, "Key3") == TRUE);
+    ES_ASSERT(EsProperties_at(props, "Key3") != NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key3", "Value3"));
+    EsProperties_atIndex(props, 2, &pair);
     ES_ASSERT(strcmp(pair.key, "Key3") == 0);
     ES_ASSERT(strcmp(pair.value, "Value3") == 0)
-    EsPropertyPairAtIndex(props, 3, &pair);
+    EsProperties_atIndex(props, 3, &pair);
     ES_ASSERT(pair.key == NULL);
     ES_ASSERT(pair.value == NULL);
 
     /* Remove head */
-    val = EsPropertyRemoveKey(props, "Key");
-    ES_ASSERT(EsNumProperties(props) == 2);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == TRUE);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key3") == TRUE);
+    val = EsProperties_removeKey(props, "Key");
+    ES_ASSERT(EsProperties_getSize(props) == 2);
+    ES_ASSERT(EsProperties_includesKey(props, "Key") == FALSE);
+    ES_ASSERT(EsProperties_includesKey(props, "Key2") == TRUE);
+    ES_ASSERT(EsProperties_includesKey(props, "Key3") == TRUE);
     ES_ASSERT(val != NULL);
     ES_ASSERT(strncmp(val, "Value", strlen("Value")) == 0);
-    ES_ASSERT(EsPropertyAt(props, "Key") == NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key", "Value") == FALSE);
+    ES_ASSERT(EsProperties_at(props, "Key") == NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key", "Value") == FALSE);
 
     /* Remove tail */
-    val = EsPropertyRemoveKey(props, "Key3");
-    ES_ASSERT(EsNumProperties(props) == 1);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == TRUE);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key3") == FALSE);
+    val = EsProperties_removeKey(props, "Key3");
+    ES_ASSERT(EsProperties_getSize(props) == 1);
+    ES_ASSERT(EsProperties_includesKey(props, "Key") == FALSE);
+    ES_ASSERT(EsProperties_includesKey(props, "Key2") == TRUE);
+    ES_ASSERT(EsProperties_includesKey(props, "Key3") == FALSE);
     ES_ASSERT(val != NULL);
     ES_ASSERT(strncmp(val, "Value3", strlen("Value3")) == 0);
-    ES_ASSERT(EsPropertyAt(props, "Key3") == NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key3", "Value3") == FALSE);
+    ES_ASSERT(EsProperties_at(props, "Key3") == NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key3", "Value3") == FALSE);
 
     /* Remove last*/
-    val = EsPropertyRemoveKey(props, "Key2");
-    ES_ASSERT(EsNumProperties(props) == 0);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key") == FALSE);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key2") == FALSE);
-    ES_ASSERT(EsPropertyIncludesKey(props, "Key3") == FALSE);
+    val = EsProperties_removeKey(props, "Key2");
+    ES_ASSERT(EsProperties_getSize(props) == 0);
+    ES_ASSERT(EsProperties_includesKey(props, "Key") == FALSE);
+    ES_ASSERT(EsProperties_includesKey(props, "Key2") == FALSE);
+    ES_ASSERT(EsProperties_includesKey(props, "Key3") == FALSE);
     ES_ASSERT(val != NULL);
     ES_ASSERT(strncmp(val, "Value2", strlen("Value2")) == 0);
-    ES_ASSERT(EsPropertyAt(props, "Key2") == NULL);
-    ES_ASSERT(EsPropertyValueIs(props, "Key2", "Value2") == FALSE);
+    ES_ASSERT(EsProperties_at(props, "Key2") == NULL);
+    ES_ASSERT(EsProperties_valueEquals(props, "Key2", "Value2") == FALSE);
 
-    EsFreeProperties(props);
+    EsProperties_free(props);
 
     return TRUE;
 }
@@ -140,15 +140,15 @@ static pboolean test_sequenceable() {
     U_32 totalNum = 0;
     U_32 i = 0;
 
-    p = EsNewProperties();
-    EsPropertyAtPut(p, "key1", "value");
-    EsPropertyAtPut(p, "key2", "value");
-    EsPropertyAtPut(p, "key3", "value");
-    EsPropertyAtPut(p, "key4", "value");
+    p = EsProperties_new();
+    EsProperties_atPut(p, "key1", "value");
+    EsProperties_atPut(p, "key2", "value");
+    EsProperties_atPut(p, "key3", "value");
+    EsProperties_atPut(p, "key4", "value");
 
-    totalNum = EsNumProperties(p);
+    totalNum = EsProperties_getSize(p);
     for(i = 0; i < totalNum; i++) {
-        EsPropertyPairAtIndex(p, i, &pair);
+        EsProperties_atIndex(p, i, &pair);
     }
     ES_ASSERT(i == 4);
 }

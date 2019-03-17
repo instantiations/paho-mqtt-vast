@@ -10,8 +10,6 @@
 #include "plibsys.h"
 
 #include "EsWorkQueue.h"
-#include "EsWorkTask.h"
-#include "EsProperties.h"
 
 /*******************/
 /*   M A C R O S   */
@@ -120,7 +118,7 @@ static void genericShutdown(EsWorkQueue *self) {
  */
 static void genericFree(EsWorkQueue *self) {
     if (self != NULL) {
-        EsFreeProperties(self->props);
+        EsProperties_free(self->props);
         free(self);
     }
 }
@@ -173,7 +171,7 @@ static void initWorkQueue(EsWorkQueue *queue) {
     if (queue != NULL) {
         /* State */
         queue->type = ESQ_TYPE_UNDEFINED;
-        queue->props = EsNewProperties();
+        queue->props = EsProperties_new();
 
         /* Function Slots */
         queue->init = genericInit;
@@ -259,7 +257,7 @@ static void syncEnqueue(EsWorkQueue *self, EsWorkTask *task) {
         do {
             if (I_CMPXCHG(&queue->state, ESQ_SYNC_STATE_IDLE, ESQ_SYNC_STATE_BUSY) == TRUE) {
                 I_DEC(&queue->numTasks);
-                EsRunWorkTask(task);
+                EsWorkTask_run(task);
                 queue->state = ESQ_SYNC_STATE_IDLE;
                 break;
             } else if (queue->state == ESQ_SYNC_STATE_SHUTDOWN) {
@@ -307,7 +305,7 @@ static void syncShutdown(EsWorkQueue *self) {
  */
 static void syncFree(EsWorkQueue *self) {
     syncShutdown(self);
-    EsFreeProperties(self->props);
+    EsProperties_free(self->props);
     free(self);
 }
 
@@ -365,11 +363,11 @@ static EsWorkQueue *EsNewSyncWorkQueue() {
 /*   I N T E R F A C E  I M P L E M E N T A T I O N   */
 /******************************************************/
 
-EsProperties *EsGetWorkQueueProps(const EsWorkQueue *queue) {
+EsProperties *EsWorkQueue_getProperties(const EsWorkQueue *queue) {
     return (queue != NULL) ? queue->props : NULL;
 }
 
-EsWorkQueue *EsNewWorkQueue(enum EsWorkQueueType type) {
+EsWorkQueue *EsWorkQueue_new(enum EsWorkQueueType type) {
     EsWorkQueue *queueImpl = NULL;
 
     switch (type) {
@@ -383,30 +381,30 @@ EsWorkQueue *EsNewWorkQueue(enum EsWorkQueueType type) {
     return queueImpl;
 }
 
-void EsFreeWorkQueue(EsWorkQueue *queue) {
+void EsWorkQueue_free(EsWorkQueue *queue) {
     if (queue != NULL) {
         queue->free(queue);
     }
 }
 
-void EsWorkQueueInit(EsWorkQueue *queue) {
+void EsWorkQueue_init(EsWorkQueue *queue) {
     if (queue != NULL) {
         queue->init(queue);
     }
 }
 
-void EsWorkQueueShutdown(EsWorkQueue *queue) {
+void EsWorkQueue_shutdown(EsWorkQueue *queue) {
     if (queue != NULL) {
         queue->shutDown(queue);
     }
 }
 
-void EsWorkQueueSubmit(EsWorkQueue *queue, EsWorkTask *task) {
+void EsWorkQueue_submit(EsWorkQueue *queue, EsWorkTask *task) {
     if (queue != NULL) {
         queue->enqueue(queue, task);
     }
 }
 
-U_32 EsNumWorkQueueTasks(const EsWorkQueue *queue) {
+U_32 EsWorkQueue_getSize(const EsWorkQueue *queue) {
     return (queue != NULL) ? queue->getNumTasks(queue) : 0;
 }

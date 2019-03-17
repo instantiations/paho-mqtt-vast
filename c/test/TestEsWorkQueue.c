@@ -17,7 +17,7 @@ static pboolean FreeFuncCalled = FALSE;
  * @param task
  */
 static void counterWorkTaskFunc(EsWorkTask *task) {
-    U_PTR incAmount = (U_PTR) EsGetWorkTaskData(task);
+    U_PTR incAmount = (U_PTR) EsWorkTask_getUserData(task);
     Counter += incAmount;
 }
 
@@ -39,8 +39,8 @@ static void *produceCounterIncrementer(void *arg) {
     for (int i = 0; i < numTasks; i++) {
         EsWorkTask *task = NULL;
 
-        task = EsNewWorkTaskInit(counterWorkTaskFunc, (void *) (U_PTR) 1);
-        EsWorkQueueSubmit(Queue, task);
+        task = EsWorkTask_newInit(counterWorkTaskFunc, (void *) (U_PTR) 1);
+        EsWorkQueue_submit(Queue, task);
     }
     p_uthread_exit(0);
     return NULL;
@@ -58,11 +58,11 @@ static void *produceCounterIncrementer(void *arg) {
 static pboolean test_newFree() {
 
     Queue = NULL;
-    ES_ASSERT(EsNumWorkQueueTasks(Queue) == 0);
-    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
-    ES_ASSERT(EsNumWorkQueueTasks(Queue) == 0);
+    ES_ASSERT(EsWorkQueue_getSize(Queue) == 0);
+    Queue = EsWorkQueue_new(ESQ_TYPE_SYNCHRONOUS);
+    ES_ASSERT(EsWorkQueue_getSize(Queue) == 0);
     ES_ASSERT(Queue != NULL);
-    EsFreeWorkQueue(Queue);
+    EsWorkQueue_free(Queue);
 
     return TRUE;
 }
@@ -76,13 +76,13 @@ static pboolean test_properties() {
 
     /* Test against null task */
     Queue = NULL;
-    ES_ASSERT(EsGetWorkQueueProps(Queue) == NULL);
+    ES_ASSERT(EsWorkQueue_getProperties(Queue) == NULL);
 
-    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
-    props = EsGetWorkQueueProps(Queue);
-    ES_ASSERT(EsNumProperties(props) == 0);
+    Queue = EsWorkQueue_new(ESQ_TYPE_SYNCHRONOUS);
+    props = EsWorkQueue_getProperties(Queue);
+    ES_ASSERT(EsProperties_getSize(props) == 0);
 
-    EsFreeWorkQueue(Queue);
+    EsWorkQueue_free(Queue);
 
     return TRUE;
 }
@@ -96,16 +96,16 @@ static pboolean test_sync_currentThreadProducer() {
     U_32 numTasks = 1000;
 
     Counter = 0;
-    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
+    Queue = EsWorkQueue_new(ESQ_TYPE_SYNCHRONOUS);
     ES_ASSERT(Counter == 0);
     for (int i = 0; i < numTasks; i++) {
         EsWorkTask *task = NULL;
 
-        task = EsNewWorkTaskInit(counterWorkTaskFunc, (void *) (U_PTR) 1);
-        EsWorkQueueSubmit(Queue, task);
+        task = EsWorkTask_newInit(counterWorkTaskFunc, (void *) (U_PTR) 1);
+        EsWorkQueue_submit(Queue, task);
     }
-    ES_ASSERT(EsNumWorkQueueTasks(Queue) == 0);
-    EsFreeWorkQueue(Queue);
+    ES_ASSERT(EsWorkQueue_getSize(Queue) == 0);
+    EsWorkQueue_free(Queue);
     ES_ASSERT(Counter == numTasks);
     return TRUE;
 }
@@ -120,14 +120,14 @@ static pboolean test_sync_separateThreadProducer() {
     U_32 numTasks = 1000;
 
     Counter = 0;
-    Queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
-    EsWorkQueueInit(queue);
+    Queue = EsWorkQueue_new(ESQ_TYPE_SYNCHRONOUS);
+    EsWorkQueue_init(queue);
 
     PUThread *producer = p_uthread_create((PUThreadFunc) produceCounterIncrementer, (ppointer) (U_PTR) numTasks, TRUE);
     ES_DENY(producer == NULL);
     p_uthread_join(producer);
     p_uthread_unref(producer);
-    EsFreeWorkQueue(queue);
+    EsWorkQueue_free(queue);
     ES_ASSERT(Counter == numTasks);
     return TRUE;
 }

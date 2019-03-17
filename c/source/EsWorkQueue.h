@@ -14,13 +14,13 @@
  *  @example
  *  static void printHelloWorld(EsWorkTask *task) { printf("Hello World\n"); }
  *
- *  EsWorkQueue *queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS);
- *  EsWorkQueueInit(queue);
- *  EsWorkTask *task = EsNewWorkTaskInit(printHelloWorld, NULL);
- *  EsWorkQueueSubmit(queue, task);
- *  EsWorkQueueShutdown(queue);
- *  EsFreeWorkTask(task);
- *  EsFreeWorkQueue(queue);
+ *  EsWorkQueue *queue = EsWorkQueue_new(ESQ_TYPE_SYNCHRONOUS);
+ *  EsWorkQueue_init(queue);
+ *  EsWorkTask *task = EsWorkTask_newInit(printHelloWorld, NULL);
+ *  EsWorkQueue_submit(queue, task);
+ *  EsWorkQueue_shutdown(queue);
+ *  EsWorkTask_free(task);
+ *  EsWorkQueue_free(queue);
  *
  *******************************************************************************/
 #ifndef ES_WORK_QUEUE_H
@@ -58,27 +58,27 @@ typedef struct _EsWorkQueue EsWorkQueue;
  * @param type EsWorkQueueType
  * @return queue
  */
-EsWorkQueue *EsNewWorkQueue(enum EsWorkQueueType type);
+EsWorkQueue *EsWorkQueue_new(enum EsWorkQueueType type);
 
 /**
  * @brief Initialize the queue
  * @example starting thread consumers might be done here
  * @param queue
  */
-void EsWorkQueueInit(EsWorkQueue *queue);
+void EsWorkQueue_init(EsWorkQueue *queue);
 
 /**
  * @brief Shuts down the queue gracefully
  * @param queue
  */
-void EsWorkQueueShutdown(EsWorkQueue *queue);
+void EsWorkQueue_shutdown(EsWorkQueue *queue);
 
 /**
  * @brief Destroy the work queue
  * @note This will do a forced shutdown of the queue
  * @param queue
  */
-void EsFreeWorkQueue(EsWorkQueue *queue);
+void EsWorkQueue_free(EsWorkQueue *queue);
 
 /*************************/
 /*   A C C E S S I N G   */
@@ -89,7 +89,7 @@ void EsFreeWorkQueue(EsWorkQueue *queue);
  * @param queue
  * @return EsProperties
  */
-EsProperties *EsGetWorkQueueProps(const EsWorkQueue *queue);
+EsProperties *EsWorkQueue_getProperties(const EsWorkQueue *queue);
 
 
 /************************/
@@ -101,13 +101,13 @@ EsProperties *EsGetWorkQueueProps(const EsWorkQueue *queue);
  * @param queue
  * @param task
  */
-void EsWorkQueueSubmit(EsWorkQueue *queue, EsWorkTask *task);
+void EsWorkQueue_submit(EsWorkQueue *queue, EsWorkTask *task);
 
 /**
  * @brief Answer the number of tasks waiting to execute
  * @param queue
  * @return U_32 num pending tasks
  */
-U_32 EsNumWorkQueueTasks(const EsWorkQueue *queue);
+U_32 EsWorkQueue_getSize(const EsWorkQueue *queue);
 
 #endif //ES_WORK_QUEUE_H
