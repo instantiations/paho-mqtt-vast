@@ -386,7 +386,7 @@ if (BUILD_TESTING)
     #-- Tests: EsProperties
     add_executable(tests_esproperties
             ${ES_C_TEST_SRC_DIR}/TestEsProperties.c
-            ${ES_C_SRC_DIR}/EsProperties.c)
+            ${VAST_SOURCES})
     add_dependencies(tests_esproperties ${PLIBSYS_PROJ_NAME})
     target_link_libraries(tests_esproperties ${VAST_PAHO_SYNC_CB_LIBS})
     add_test(NAME tests_esproperties COMMAND tests_esproperties)
@@ -395,8 +395,7 @@ if (BUILD_TESTING)
     #-- Tests: EsWorkTask
     add_executable(tests_esworktask
             ${ES_C_TEST_SRC_DIR}/TestEsWorkTask.c
-            ${ES_C_SRC_DIR}/EsProperties.c
-            ${ES_C_SRC_DIR}/EsWorkTask.c)
+            ${VAST_SOURCES})
     add_dependencies(tests_esworktask ${PLIBSYS_PROJ_NAME})
     target_link_libraries(tests_esworktask ${VAST_PAHO_SYNC_CB_LIBS})
     add_test(NAME tests_esworktask COMMAND tests_esworktask)
@@ -405,9 +404,7 @@ if (BUILD_TESTING)
     #-- Tests: EsWorkQueue
     add_executable(tests_esworkqueue
             ${ES_C_TEST_SRC_DIR}/TestEsWorkQueue.c
-            ${ES_C_SRC_DIR}/EsProperties.c
-            ${ES_C_SRC_DIR}/EsWorkQueue.c
-            ${ES_C_SRC_DIR}/EsWorkTask.c)
+            ${VAST_SOURCES})
     add_dependencies(tests_esworkqueue ${PLIBSYS_PROJ_NAME})
     target_link_libraries(tests_esworkqueue ${VAST_PAHO_SYNC_CB_LIBS})
     add_test(NAME tests_esworkqueue COMMAND tests_esworkqueue)
