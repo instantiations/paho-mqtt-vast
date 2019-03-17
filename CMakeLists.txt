@@ -172,6 +172,8 @@ set(ES_C_TEST_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/test)
 # 3rd Party Module: Plibsys
 #------------------------------------------------------------------
 include(ExternalProject)
+#-- Add threading lib
+find_package(Threads)
 option(PLIBSYS_BUILD_DOC "Build plibsys documentation" OFF)
 option(PLIBSYS_TESTS "Build plibsys tests" OFF)
 set(PLIBSYS_PROJ_NAME plibsys)
@@ -210,7 +212,10 @@ if (MSVC)
 else ()
     set(PLIBSYS_LIBRARY ${PLIBSYS_BIN_ROOT}/lib/libplibsysstatic.a)
 endif ()
-set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${PLIBSYS_LIBRARY})
+set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS}
+        ${PLIBSYS_LIBRARY}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${CMAKE_DL_LIBS})
 set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${PLIBSYS_PROJ_NAME})
 
 #------------------------------------------------------------------
@@ -417,7 +422,7 @@ if (BUILD_TESTING)
             ${ES_C_SRC_DIR}/EsMqttLibrary.c
             ${ES_C_BIN_DIR}/EsMqttVersionInfo.h)
     add_dependencies(tests_esmqttlibrary ${VAST_PAHO_DEPS})
-    target_link_libraries(tests_esmqttlibrary ${VAST_PAHO_LIBS})
+    target_link_libraries(tests_esmqttlibrary ${VAST_PAHO_SYNC_CB_LIBS})
     add_test(NAME tests_esmqttlibrary COMMAND tests_esmqttlibrary)
     set_property(TARGET tests_esmqttlibrary PROPERTY PROJECT_LABEL "Tests_EsMqttLibrary")
 endif ()

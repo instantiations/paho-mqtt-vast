@@ -11,6 +11,8 @@
 
 #include "EsWorkQueue.h"
 
+#include <stdlib.h>
+
 /*******************/
 /*   M A C R O S   */
 /*******************/
