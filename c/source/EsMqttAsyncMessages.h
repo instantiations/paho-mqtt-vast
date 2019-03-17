@@ -131,6 +131,6 @@ void EsMqttAsyncMessage_free(EsMqttAsyncMessage *message);
  * @param message
  * @return TRUE if posted, FALSE otherwise (full queue)
  */
-BOOLEAN EsMqttAsyncMessage_post(EsMqttAsyncMessage *message);
+BOOLEAN EsMqttAsyncMessage_send(EsMqttAsyncMessage *message);
 
 #endif //ES_MQTT_ASYNC_QUEUE_MESSAGES_H

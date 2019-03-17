@@ -1,5 +1,5 @@
 LIBRARY	@VAST_PAHO_SYNC_CB_LIBNAME@
 EXPORTS
-    MqttVastRegisterCallback
-    MqttVastCheckpoint
-    MqttVastVersionString
+    EsMqttVastRegisterCallback
+    EsMqttVastCheckpoint
+    EsMqttVastVersionString

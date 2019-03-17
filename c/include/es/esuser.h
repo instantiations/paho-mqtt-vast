@@ -25,15 +25,16 @@
 #define EsFalse                         ((EsObject) 0x2E)
 #define EsNil                           ((EsObject) 0x0E)
 #define EsIsNil(o)                      ((o) == EsNil)
-#define EsLowBit(o)                     (((U_PTR) (o)) & 1)
-#define EsTagSmallInteger               1
-#define EsShiftSmallInteger             1
-#define EsPrivateToSmallInteger(o)      (((o) << EsShiftSmallInteger) | EsTagSmallInteger)
+#define EsLowBit(o)                     (((U_PTR) (o)) & 1u)
+#define EsTagSmallInteger               1u
+#define EsShiftSmallInteger             1u
+#define EsPrivateToSmallInteger(o)      (((o) << (U_32)EsShiftSmallInteger) | EsTagSmallInteger)
 #define EsPrivateToEsObject(o)          ((EsObject)(U_PTR)(S_INT)(o))
-#define EsI32ToSmallInteger(val)        (EsPrivateToEsObject(EsPrivateToSmallInteger((S_INT)(val))))
-#define EsIsSmallInteger(o)             (EsLowBit(o) == EsTagSmallInteger)
+#define EsI32ToSmallInteger(val)        (EsPrivateToEsObject(EsPrivateToSmallInteger((U_32)(S_INT)(val))))
+#define EsIsSmallInteger(o)             (EsLowBit(o) == (U_PTR)EsTagSmallInteger)
 #define EsPrivateSmallIntegerAsI32(o)   ((I_32)(U_PTR)(o))
-#define EsSmallIntegerToI32(o)          ((EsPrivateSmallIntegerAsI32(o)) >> EsShiftSmallInteger)
+#define EsPrivateSmallIntegerAsU32(o)   ((U_32)EsPrivateSmallIntegerAsI32(o))
+#define EsSmallIntegerToI32(o)          ((I_32)(EsPrivateSmallIntegerAsU32(o) >> EsShiftSmallInteger))
 
 /**********************************/
 /*  S M A L L T A L K  T Y P E S  */
@@ -81,11 +82,11 @@ BOOLEAN VMCALL name (EsVMContext EsPrimVMContext, U_32 EsPrimArgumentCount, U_32
 #define EsPrimReceiver                  EsPrimArgument(EsPrimArgNumSelf)
 
 #define EsPrimFail(err, arg) \
-    return((EsPrimVMContext->errorCode = (err)), \
+    return((EsPrimVMContext->errorCode = (U_32) (err)), \
         (EsPrimVMContext->argNumber = (U_32) (arg)), \
-        FALSE)
+        (U_32)FALSE)
 
-#define EsPrimSucceed(val)    return((EsPrimReceiver = (val)), TRUE)
+#define EsPrimSucceed(val)    return((EsPrimReceiver = (val)), (U_32)TRUE)
 #define EsPrimSucceedBoolean(expr)    EsPrimSucceed((expr) ? EsTrue : EsFalse)
 
 /******************/

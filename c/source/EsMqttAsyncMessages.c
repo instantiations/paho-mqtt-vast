@@ -528,7 +528,7 @@ BOOLEAN EsMqttAsyncMessage_SetTarget(enum EsMqttVastCallbackTypes cbType, EsObje
 }
 
 
-BOOLEAN EsMqttAsyncMessage_post(EsMqttAsyncMessage *message) {
+BOOLEAN EsMqttAsyncMessage_send(EsMqttAsyncMessage *message) {
     EsWorkTask *task;
 
     task = EsWorkTask_newInit(submitToAsyncQueue, message);

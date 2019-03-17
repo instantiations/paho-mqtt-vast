@@ -11,8 +11,6 @@
 
 #include "EsWorkQueue.h"
 
-#include <stdlib.h>
-
 /*******************/
 /*   M A C R O S   */
 /*******************/
@@ -61,7 +59,7 @@
  *  void *additionalState;
  * }
  * ...
- * EsWorkQueue *queue = EsNewWorkQueue(ESQ_TYPE_SYNCHRONOUS)
+ * EsWorkQueue *queue = EsWorkQueue_new(ESQ_TYPE_SYNCHRONOUS)
  * queue->shutDown = myShutdownImpl;
  *
  * @see Synchronous Queue Impl below for a complete example
@@ -339,7 +337,7 @@ static U_32 syncGetNumTasks(const EsWorkQueue *self) {
  * @brief Answer a new synchronous work queue
  * @return queue
  */
-static EsWorkQueue *EsNewSyncWorkQueue() {
+static EsWorkQueue *EsSyncWorkQueue_new() {
     EsSyncWorkQueue *impl = NULL;
 
     impl = (EsSyncWorkQueue *) calloc(1, sizeof(*impl));
@@ -374,7 +372,7 @@ EsWorkQueue *EsWorkQueue_new(enum EsWorkQueueType type) {
 
     switch (type) {
         case ESQ_TYPE_SYNCHRONOUS:
-            queueImpl = EsNewSyncWorkQueue();
+            queueImpl = EsSyncWorkQueue_new();
             break;
         default:
             break;

@@ -138,7 +138,7 @@ static void traceCallback(I_32 level, char *message) {
 
     msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_TRACE, 2, level, message);
     if (msg != NULL) {
-        EsMqttAsyncMessage_post(msg);
+        EsMqttAsyncMessage_send(msg);
     }
 }
 
@@ -147,7 +147,7 @@ static void connectionLostCallback(void *context, char *cause) {
 
     msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_CONNECTIONLOST, 2, context, cause);
     if (msg != NULL) {
-        EsMqttAsyncMessage_post(msg);
+        EsMqttAsyncMessage_send(msg);
     }
 }
 
@@ -156,7 +156,7 @@ static void disconnectedCallback(void *context, MQTTProperties *properties, enum
 
     msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_DISCONNECTED, 3, context, context, properties, reasonCode);
     if (msg != NULL) {
-        EsMqttAsyncMessage_post(msg);
+        EsMqttAsyncMessage_send(msg);
     }
 }
 
@@ -166,7 +166,7 @@ static I_32 messageArrivedCallback(void *context, char *topicName, I_32 topicLen
 
     msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_MESSAGEARRIVED, 4, context, topicName, topicLen, message);
     if (msg != NULL) {
-        result = EsMqttAsyncMessage_post(msg) ? 1 : 0;
+        result = EsMqttAsyncMessage_send(msg) ? 1 : 0;
     }
     return result;
 }
@@ -176,7 +176,7 @@ static void deliveryCompleteCallback(void *context, MQTTClient_deliveryToken tok
 
     msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_DELIVERYCOMPLETE, 2, context, token);
     if (msg != NULL) {
-        EsMqttAsyncMessage_post(msg);
+        EsMqttAsyncMessage_send(msg);
     }
 }
 
@@ -186,7 +186,7 @@ static void publishedCallback(void *context, I_32 dt, I_32 packet_type, MQTTProp
 
     msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_PUBLISHED, 5, context, dt, packet_type, properties, reasonCode);
     if (msg != NULL) {
-        EsMqttAsyncMessage_post(msg);
+        EsMqttAsyncMessage_send(msg);
     }
 }
 

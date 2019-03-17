@@ -18,12 +18,12 @@
  *  with the key "PrintKey"
  *
  *  // Callback
- *  static void printProperties(EsWorkTask *task) { printf("%s", EsWorkTaskPropAt(task, "PrintKey")); }
+ *  static void printProperties(EsWorkTask *task) { printf("%s", EsProperties_at(EsWorkTask_getProperties(task), "PrintKey")); }
  *
  *  EsWorkTask *task = EsWorkTask_new(printProperties, NULL);
- *  EsWorkTaskPropAtPut(task, "PrintKey", "Hello World");
- *  EsRunWorkTask(task);
- *  EsFreeWorkTask(task);
+ *  EsProperties_atPut(EsWorkTask_getProperties(task), "PrintKey", "Hello World"));
+ *  EsWorkTask_run(task);
+ *  EsWorkTask_free(task);
  *
  *******************************************************************************/
 #ifndef ES_WORK_TASK_H
@@ -43,13 +43,13 @@ typedef struct _EsWorkTask EsWorkTask;
 /**
  * @brief Function that task consumer runs
  */
-typedef void (*EsWorkTaskFunc)(EsWorkTask *task);
+typedef void (*EsWorkTaskRunFunc)(EsWorkTask *task);
 
 /**
  * @brief Function called on EsFreeWorkTask to free args
  * @note If this func is set, it will run even if data is NULL
  */
-typedef void (*EsWorkTaskFreeDataFunc)(void *args);
+typedef void (*EsWorkTaskFreeUserDataFunc)(void *args);
 
 /*************************/
 /*   L I F E C Y C L E   */
@@ -67,7 +67,7 @@ EsWorkTask *EsWorkTask_new();
  * @param args user-supplied data
  * @return new work task
  */
-EsWorkTask *EsWorkTask_newInit(EsWorkTaskFunc func, void *args);
+EsWorkTask *EsWorkTask_newInit(EsWorkTaskRunFunc func, void *args);
 
 /**
  * @brief Destroy the work task
@@ -91,14 +91,14 @@ EsProperties *EsWorkTask_getProperties(const EsWorkTask *task);
  * @param task
  * @return EsWorkFunc
  */
-EsWorkTaskFunc EsWorkTask_getRunFunc(const EsWorkTask *task);
+EsWorkTaskRunFunc EsWorkTask_getRunFunc(const EsWorkTask *task);
 
 /**
  * @brief Set the runnable function
  * @param task
  * @param func to run by work queue consumer
  */
-void EsWorkTask_setRunFunc(EsWorkTask *task, EsWorkTaskFunc func);
+void EsWorkTask_setRunFunc(EsWorkTask *task, EsWorkTaskRunFunc func);
 
 /**
  * @brief Answer the user-supplied data for the runnable function
@@ -122,7 +122,7 @@ void EsWorkTask_setUserData(EsWorkTask *task, void *data);
  * @param task
  * @return func to run on free
  */
-EsWorkTaskFreeDataFunc EsWorkTask_getFreeUserDataFunc(const EsWorkTask *task);
+EsWorkTaskFreeUserDataFunc EsWorkTask_getFreeUserDataFunc(const EsWorkTask *task);
 
 /**
  * @brief Set the function used on free to cleanup args
@@ -130,7 +130,7 @@ EsWorkTaskFreeDataFunc EsWorkTask_getFreeUserDataFunc(const EsWorkTask *task);
  * @param task
  * @param func to run on free
  */
-void EsWorkTask_setFreeUserDataFunc(EsWorkTask *task, EsWorkTaskFreeDataFunc func);
+void EsWorkTask_setFreeUserDataFunc(EsWorkTask *task, EsWorkTaskFreeUserDataFunc func);
 
 /*************************/
 /*   E X E C U T I O N   */

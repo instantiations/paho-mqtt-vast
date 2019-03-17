@@ -24,8 +24,8 @@
  */
 struct _EsWorkTask {
     EsProperties *props;
-    EsWorkTaskFreeDataFunc freeUserDataFunc;
-    EsWorkTaskFunc runFunc;
+    EsWorkTaskFreeUserDataFunc freeUserDataFunc;
+    EsWorkTaskRunFunc runFunc;
     void *userData;
 };
 
@@ -37,7 +37,7 @@ EsWorkTask *EsWorkTask_new() {
     return (EsWorkTask *) calloc(1, sizeof(EsWorkTask));
 }
 
-EsWorkTask *EsWorkTask_newInit(EsWorkTaskFunc func, void *args) {
+EsWorkTask *EsWorkTask_newInit(EsWorkTaskRunFunc func, void *args) {
     EsWorkTask *task = NULL;
 
     task = EsWorkTask_new();
@@ -62,21 +62,21 @@ EsProperties *EsWorkTask_getProperties(const EsWorkTask *task) {
     return (task != NULL) ? task->props : NULL;
 }
 
-EsWorkTaskFunc EsWorkTask_getRunFunc(const EsWorkTask *task) {
+EsWorkTaskRunFunc EsWorkTask_getRunFunc(const EsWorkTask *task) {
     return (task != NULL) ? task->runFunc : NULL;
 }
 
-void EsWorkTask_setRunFunc(EsWorkTask *task, EsWorkTaskFunc func) {
+void EsWorkTask_setRunFunc(EsWorkTask *task, EsWorkTaskRunFunc func) {
     if (task != NULL) {
         task->runFunc = func;
     }
 }
 
-EsWorkTaskFreeDataFunc EsWorkTask_getFreeUserDataFunc(const EsWorkTask *task) {
+EsWorkTaskFreeUserDataFunc EsWorkTask_getFreeUserDataFunc(const EsWorkTask *task) {
     return (task != NULL) ? task->freeUserDataFunc : NULL;
 }
 
-void EsWorkTask_setFreeUserDataFunc(EsWorkTask *task, EsWorkTaskFreeDataFunc func) {
+void EsWorkTask_setFreeUserDataFunc(EsWorkTask *task, EsWorkTaskFreeUserDataFunc func) {
     if (task != NULL) {
         task->freeUserDataFunc = func;
     }

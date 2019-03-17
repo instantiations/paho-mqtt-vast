@@ -28,10 +28,12 @@ void EsMqttUserPrims_ModuleShutdown() {
     // NO-OP
 }
 
-EsUserPrimitive(MqttVastRegisterCallback) {
+EsUserPrimitive(EsMqttVastRegisterCallback) {
     I_32 cbType;
-    void *funcAddr;
-    EsObject cbReceiver, cbSelector, cbAddress;
+    void *funcAddr = NULL;
+    EsObject cbReceiver = NULL;
+    EsObject cbSelector = NULL;
+    EsObject cbAddress = NULL;
 
     EsMqttLibraryInit(EsPrimVMContext->globalInfo);
 
@@ -60,10 +62,10 @@ EsUserPrimitive(MqttVastRegisterCallback) {
     EsPrimSucceed(cbAddress);
 }
 
-EsUserPrimitive(MqttVastCheckpoint) {
+EsUserPrimitive(EsMqttVastCheckpoint) {
     I_32 id;
-    BOOLEAN rc;
-    EsMqttAsyncMessage *msg;
+    BOOLEAN sent;
+    EsMqttAsyncMessage *msg = NULL;
 
     EsMqttLibraryInit(EsPrimVMContext->globalInfo);
 
@@ -80,13 +82,14 @@ EsUserPrimitive(MqttVastCheckpoint) {
 
     id = EsSmallIntegerToI32(EsPrimArgument(1));
     msg = EsMqttAsyncMessage_newInit(ESMQTT_CB_TYPE_CHECKPOINT, 1, id);
-    rc = EsMqttAsyncMessage_post(msg);
+    sent = EsMqttAsyncMessage_send(msg);
+    EsMqttAsyncMessage_free(msg);
 
-    EsPrimSucceedBoolean(rc);
+    EsPrimSucceedBoolean(sent);
 }
 
-EsUserPrimitive(MqttVastVersionString) {
-    EsObject string;
+EsUserPrimitive(EsMqttVastVersionString) {
+    EsObject string = NULL;
     U_32 rc;
 
     rc = EsCStringToString(ES_MQTT_VERSION_STR, &string);
