@@ -348,9 +348,9 @@ endif ()
 find_library(ESVM_LIBRARY
         NAMES esvm40 esvm40.so
         PATHS
-        "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
+        ${ES_LIB_CUSTOM_LOCATION}
         "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
-        ${CUSTOM_ESVM_LIBRARY}
+        "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
         NO_DEFAULT_PATH)
 message(STATUS "Found VA Smalltalk VM Library: ${ESVM_LIBRARY}")
 if (WIN32)
@@ -365,9 +365,9 @@ if (WIN32)
     find_library(ESAE_LIBRARY
             NAMES esae40
             PATHS
-            "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
+            ${ES_LIB_CUSTOM_LOCATION}
             "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
-            ${CUSTOM_ESAE_LIBRARY}
+            "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
             NO_DEFAULT_PATH)
     message(STATUS "Found VA Smalltalk EBCDIC Library: ${ESAE_LIBRARY}")
     configure_file(${ESAE_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esae40.dll COPYONLY)
