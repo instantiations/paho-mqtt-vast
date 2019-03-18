@@ -14,7 +14,7 @@
 #     The layout of this file is logically organized as follows
 #     - Versioning
 #     - Options (i.e. Tests, Docs...)
-#     - General Compiler related setup
+#     - Platform/Compiler related settings
 #     - Common Project Source directory prefixes
 #     - 3rd-party modules
 #     - Common build instructions
@@ -133,6 +133,33 @@ endif ()
 #------------------------------------------------------------------
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc")
+    if (UNIX AND NOT APPLE)
+        if (ES_64BIT AND (${CMAKE_SYSTEM_NAME} STREQUAL "Linux"))
+            set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -fPIC")
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+        elseif (CMAKE_SIZEOF_VOID_P MATCHES 8)
+            # 32-bit binaries on 64-bit platform
+            # Command for prepare platform eviropment:
+            # sudo apt-get install g++-multilib libc6-dev-i386
+            set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -m32")
+            set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -m32")
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+            set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -m32")
+        endif ()
+    endif ()
+endif ()
+
+#------------------------------------------------------------------
+# MINGW Settings
+#------------------------------------------------------------------
+if (MINGW)
+    #-- Do not rely on this being defined in mingw...it just happens to be defined when using
+    #-- gnu standard...but not c standard
+    add_definitions(-DWIN32)
+    if (NOT VM_64BIT)
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--enable-stdcall-fixup")
+    endif ()
 endif ()
 
 #------------------------------------------------------------------
@@ -142,6 +169,32 @@ if (MSVC)
     list(APPEND VAST_PAHO_DEFS -D_CRT_SECURE_NO_WARNINGS)
     list(APPEND VAST_PAHO_DEFS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
     list(APPEND VAST_PAHO_DEFS -D_CRT_NONSTDC_NO_DEPRECATE)
+
+    #-- If using Microsoft's compiler, then replace the "/MD" flag for each
+    #-- build type with "/MT" so we get static compilation
+    foreach (flag_var
+            CMAKE_C_FLAGS
+            CMAKE_C_FLAGS_DEBUG
+            CMAKE_C_FLAGS_RELEASE
+            CMAKE_C_FLAGS_MINSIZEREL
+            CMAKE_C_FLAGS_RELWITHDEBINFO)
+        if (${flag_var} MATCHES "/MD")
+            string(REGEX REPLACE "/MD" "/MT" msvc_flag_var "${${flag_var}}")
+            set(${flag_var} ${msvc_flag_var})
+        endif (${flag_var} MATCHES "/MD")
+
+        #-- Disable generation of embedded manifest file...which is now the default
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
+
+        #-- Disable incremental linking...which is now the default
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /INCREMENTAL:NO")
+
+        # Mark 32 bit executables large address aware so they can use > 2GB address space
+        if ((CMAKE_SIZEOF_VOID_P MATCHES 4) OR (NOT ES_64BIT))
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+        endif ()
+
+    endforeach ()
 endif ()
 
 #------------------------------------------------------------------
@@ -223,7 +276,7 @@ ExternalProject_Add(
         -DCMAKE_INSTALL_PREFIX=${PLIBSYS_BIN_ROOT}
         -DPLIBSYS_BUILD_DOC=${PLIBSYS_BUILD_DOC}
         -DPLIBSYS_TESTS=${PLIBSYS_TESTS}
-        -DCMAKE_C_FLAGS="-fPIC"
+        -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
         -DCMAKE_C_COMPILER_ID=${PLIBSYS_COMPILER_ID}
 )
 set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
@@ -269,7 +322,7 @@ set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es CACHE PATH "ES: Includes")
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)")
     if (ES_64BIT)
         set(ES_LIB_SUBFOLDER arm64)
-        et(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files/Instantiations/VA Smalltalk/9.2x64")
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files/Instantiations/VA Smalltalk/9.2x64/bin")
     else ()
         set(ES_LIB_SUBFOLDER arm)
         set(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files (x86)/Instantiations/VA Smalltalk/9.2x86")
@@ -279,14 +332,14 @@ elseif (ES_64BIT)
     if (WIN32)
         set(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files/Instantiations/VA Smalltalk/9.2x64")
     else ()
-        set(ES_LIB_DEFAULT_INSTALL_LOCATION "/usr/local/VASmalltalk/9.2x64")
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "/usr/local/VASmalltalk/9.2x64/bin")
     endif ()
 else ()
     set(ES_LIB_SUBFOLDER x86)
     if (WIN32)
         set(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files (x86)/Instantiations/VA Smalltalk/9.2x86")
     else ()
-        set(ES_LIB_DEFAULT_INSTALL_LOCATION "/usr/local/VASmalltalk/9.2x86")
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "/usr/local/VASmalltalk/9.2x86/bin")
     endif ()
 endif ()
 
