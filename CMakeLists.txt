@@ -265,20 +265,38 @@ set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
 #------------------------------------------------------------------
 # Module: VA Smalltalk Virtual Machine
 #------------------------------------------------------------------
-set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es
-        CACHE PATH "ES: Includes")
+set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es CACHE PATH "ES: Includes")
+message(STATUS ${CMAKE_SYSTEM_PROCESSOR})
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
+    set(ES_LIB_SUBFOLDER x86_64)
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "i686.*|i386.*|x86.*|amd64.*|AMD64.*")
+    set(ES_LIB_SUBFOLDER x86)
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)")
+    set(ES_LIB_SUBFOLDER arm)
+endif ()
+
 #-- Find VM dll and copy to bin dir
 find_library(ESVM_LIBRARY
         NAMES esvm40 esvm40.so
-        PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ESVM_LIBRARY}
+        PATHS
+        "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
+        ${CUSTOM_ESVM_LIBRARY}
         NO_DEFAULT_PATH)
 message(STATUS "Found VA Smalltalk VM Library: ${ESVM_LIBRARY}")
-configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
+if (WIN32)
+    configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
+else ()
+    configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.so COPYONLY)
+endif ()
+
 #-- On Windows, find VM dll dependency (esae40.dll) and copy to bin dir
 if (WIN32)
+    configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
     find_library(ESAE_LIBRARY
             NAMES esae40
-            PATHS "${ES_C_LIB_SRC_DIR}/es" ${CUSTOM_ESAE_LIBRARY}
+            PATHS
+            "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
+            ${CUSTOM_ESAE_LIBRARY}
             NO_DEFAULT_PATH)
     message(STATUS "Found VA Smalltalk EBCDIC Library: ${ESAE_LIBRARY}")
     configure_file(${ESAE_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esae40.dll COPYONLY)

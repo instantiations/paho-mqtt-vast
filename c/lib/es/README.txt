@@ -1,3 +1,7 @@
+Description:
+MSVC requires the .lib files. These can be easily generated
+
+MINGW-W64 Instructions:
 Use the following Mingw-w64 tools to generate .lib files
 needed for Visual Studios
 >gendef esae40.dll
