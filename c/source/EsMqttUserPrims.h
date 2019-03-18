@@ -39,7 +39,7 @@
  * receiver/selector
  *
  * Smalltalk Arguments
- * Arg1: Callback Type (@see MqttVastCallbackTypes)
+ * Arg1: Callback Type (@see EsMqttVastCallbackTypes)
  * Arg2: Class receiver of async message
  * Arg3: Selector to activate in async message
  * Returns: Callback Function Address as Smalltalk Integer
@@ -50,7 +50,7 @@
  * @param EsPrimPushCount
  * @return TRUE
  */
-EsDeclareUserPrimitive(MqttVastRegisterCallback);
+EsDeclareUserPrimitive(EsMqttVastRegisterCallback);
 
 /**
  * @brief Posts a message to the async queue (with unique id).
@@ -72,7 +72,7 @@ EsDeclareUserPrimitive(MqttVastRegisterCallback);
  * @param EsPrimPushCount
  * @return TRUE
  */
-EsDeclareUserPrimitive(MqttVastCheckpoint);
+EsDeclareUserPrimitive(EsMqttVastCheckpoint);
 
 /**
  * @brief Answers a Smalltalk String representation
@@ -89,6 +89,6 @@ EsDeclareUserPrimitive(MqttVastCheckpoint);
  * @param EsPrimPushCount
  * @return TRUE
  */
-EsDeclareUserPrimitive(MqttVastVersionString);
+EsDeclareUserPrimitive(EsMqttVastVersionString);
 
 #endif //ES_MQTT_USER_PRIMS_H

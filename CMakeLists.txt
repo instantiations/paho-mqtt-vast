@@ -56,6 +56,8 @@ if (POLICY CMP0075)
     cmake_policy(SET CMP0075 NEW)
 endif ()
 
+include(ExternalProject)
+
 set(VAST_PAHO_SYNC_CB_LIBNAME paho-mqtt3c-vacallbacks)
 
 #-- RelWithDebInfo (None Debug Release RelWithDebInfo MinSizeRel)
@@ -246,7 +248,6 @@ set(ES_C_DOCS_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}/c/docs)
 #------------------------------------------------------------------
 # 3rd Party Module: Plibsys
 #------------------------------------------------------------------
-include(ExternalProject)
 #-- Add threading lib
 find_package(Threads)
 option(PLIBSYS_BUILD_DOC "Build plibsys documentation" OFF)
