@@ -5,4 +5,4 @@ build
 /c/thirdparty/mqtt-paho-c
 /c/thirdparty/plibsys
 /c/lib/es/**/*.*
-!/c/lib/es/**/README.txt
+!/c/lib/es/**/README.md
