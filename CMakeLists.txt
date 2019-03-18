@@ -266,19 +266,36 @@ set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
 # Module: VA Smalltalk Virtual Machine
 #------------------------------------------------------------------
 set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es CACHE PATH "ES: Includes")
-message(STATUS ${CMAKE_SYSTEM_PROCESSOR})
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "amd64.*|x86_64.*|AMD64.*")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)")
+    if (ES_64BIT)
+        set(ES_LIB_SUBFOLDER arm64)
+        et(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files/Instantiations/VA Smalltalk/9.2x64")
+    else ()
+        set(ES_LIB_SUBFOLDER arm)
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files (x86)/Instantiations/VA Smalltalk/9.2x86")
+    endif ()
+elseif (ES_64BIT)
     set(ES_LIB_SUBFOLDER x86_64)
-elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "i686.*|i386.*|x86.*|amd64.*|AMD64.*")
+    if (WIN32)
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files/Instantiations/VA Smalltalk/9.2x64")
+    else ()
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "/usr/local/VASmalltalk/9.2x64")
+    endif ()
+else ()
     set(ES_LIB_SUBFOLDER x86)
-elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)")
-    set(ES_LIB_SUBFOLDER arm)
+    if (WIN32)
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "C:/Program Files (x86)/Instantiations/VA Smalltalk/9.2x86")
+    else ()
+        set(ES_LIB_DEFAULT_INSTALL_LOCATION "/usr/local/VASmalltalk/9.2x86")
+    endif ()
 endif ()
+
 
 #-- Find VM dll and copy to bin dir
 find_library(ESVM_LIBRARY
         NAMES esvm40 esvm40.so
         PATHS
+        "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
         "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
         ${CUSTOM_ESVM_LIBRARY}
         NO_DEFAULT_PATH)
@@ -295,6 +312,7 @@ if (WIN32)
     find_library(ESAE_LIBRARY
             NAMES esae40
             PATHS
+            "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
             "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
             ${CUSTOM_ESAE_LIBRARY}
             NO_DEFAULT_PATH)
