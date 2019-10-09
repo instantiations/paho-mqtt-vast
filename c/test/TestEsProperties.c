@@ -141,16 +141,18 @@ static pboolean test_sequenceable() {
     U_32 i = 0;
 
     p = EsProperties_new();
-    EsProperties_atPut(p, "key1", "value");
+	EsProperties_atPut(p, "key1", "value");
     EsProperties_atPut(p, "key2", "value");
     EsProperties_atPut(p, "key3", "value");
     EsProperties_atPut(p, "key4", "value");
-
+	
     totalNum = EsProperties_getSize(p);
     for(i = 0; i < totalNum; i++) {
         EsProperties_atIndex(p, i, &pair);
     }
     ES_ASSERT(i == 4);
+
+	return TRUE;
 }
 
 /**************************/
