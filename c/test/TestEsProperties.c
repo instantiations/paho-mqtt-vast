@@ -151,6 +151,7 @@ static pboolean test_sequenceable() {
         EsProperties_atIndex(p, i, &pair);
     }
     ES_ASSERT(i == 4);
+	EsProperties_free(p);
 
 	return TRUE;
 }
