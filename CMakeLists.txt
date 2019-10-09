@@ -25,26 +25,33 @@
 #
 #  Build Instrutions:
 #
-#     Mingw-w64 (Windows) (included some example build switches)
+#     Visual Studio 17 64-bit (Windows)
 #     >mkdir build && cd build
-#     >cmake .. -G"MinGW Makefiles" -DBUILD_DOCUMENTATION=ON -DBUILD_TESTING=ON
-#     >mingw32-make
-#     >mingw32-make test
+#     >cmake .. -G"Visual Studio 15 2017 Win64" -DBUILD_TESTING=ON
+#     >msbuild paho-mqtt-vast.sln /p:Configuration=Release /p:Platform=x64 /m
+#     >ctest -C "Release"
+#
+#     Visual Studio 17 32-bit (Windows)
+#     >mkdir build && cd build
+#     >cmake .. -G"Visual Studio 15 2017"  -DBUILD_TESTING=ON
+#     >msbuild paho-mqtt-vast.sln /p:Configuration=Release /p:Platform=Win32 /m
+#     >ctest -C "Release"
+#
+#     Mingw-w64 (Windows)
+#     >mkdir build && cd build
+#     >cmake .. -G"MinGW Makefiles" -DBUILD_DOCUMENTATION=ON
 #     >mingw32-make docs
 #
 #     Linux 64-bit (or Linux 32-bit on a 32-bit Linux OS)
 #     >mkdir build && cd build
 #     >cmake .. -G"Unix Makefiles"
+#     >mingw32-make
 #     >make
-#     >make test
-#     >make docs
 #
 #     Linux 32-bit (cross-compile on 64-bit machine)
 #     >mkdir build && cd build
 #     >cmake .. -DES_64BIT=OFF -G"Unix Makefiles"
 #     >make
-#     >make test
-#     >make docs
 #
 #*******************************************************************************/
 cmake_minimum_required(VERSION 3.0..3.13)
@@ -175,28 +182,33 @@ if (MSVC)
     #-- If using Microsoft's compiler, then replace the "/MD" flag for each
     #-- build type with "/MT" so we get static compilation
     foreach (flag_var
-            CMAKE_C_FLAGS
-            CMAKE_C_FLAGS_DEBUG
-            CMAKE_C_FLAGS_RELEASE
-            CMAKE_C_FLAGS_MINSIZEREL
-            CMAKE_C_FLAGS_RELWITHDEBINFO)
-        if (${flag_var} MATCHES "/MD")
-            string(REGEX REPLACE "/MD" "/MT" msvc_flag_var "${${flag_var}}")
-            set(${flag_var} ${msvc_flag_var})
-        endif (${flag_var} MATCHES "/MD")
-
-        #-- Disable generation of embedded manifest file...which is now the default
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
-
-        #-- Disable incremental linking...which is now the default
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /INCREMENTAL:NO")
-
-        # Mark 32 bit executables large address aware so they can use > 2GB address space
-        if ((CMAKE_SIZEOF_VOID_P MATCHES 4) OR (NOT ES_64BIT))
-            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
-        endif ()
-
+		  CMAKE_C_FLAGS
+		  CMAKE_C_FLAGS_DEBUG
+		  CMAKE_C_FLAGS_RELEASE
+		  CMAKE_C_FLAGS_MINSIZEREL
+		  CMAKE_C_FLAGS_RELWITHDEBINFO
+		  CMAKE_CXX_FLAGS
+		  CMAKE_CXX_FLAGS_DEBUG
+		  CMAKE_CXX_FLAGS_RELEASE
+		  CMAKE_CXX_FLAGS_MINSIZEREL
+		  CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+		if (${flag_var} MATCHES "/MD")
+			string(REGEX REPLACE "/MD" "/MT" msvc_flag_var "${${flag_var}}")
+			set(${flag_var} ${msvc_flag_var})
+		endif (${flag_var} MATCHES "/MD")
     endforeach ()
+
+    #-- Disable generation of embedded manifest file...which is now the default
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
+
+    #-- Disable incremental linking...which is now the default
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /INCREMENTAL:NO")
+
+    # Mark 32 bit executables large address aware so they can use > 2GB address space
+    if ((CMAKE_SIZEOF_VOID_P MATCHES 4) OR (NOT ES_64BIT))
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
+    endif ()
+
 endif ()
 
 #------------------------------------------------------------------
@@ -257,10 +269,11 @@ set(PLIBSYS_SRC_ROOT ${ES_C_THIRDPARTY_SRC_DIR}/plibsys)
 set(PLIBSYS_BIN_ROOT ${ES_C_THIRDPARTY_BIN_DIR}/plibsys)
 #-- Raspbian Check and Fix
 if (NOT DEFINED ${CMAKE_C_COMPILER_ID} AND ${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
-    set(PLIBSYS_COMPILER_ID GNU)
+    set(PLIBSYS_COMPILER_ID -DCMAKE_C_COMPILER_ID=GNU)
 else ()
-    set(PLIBSYS_COMPILER_ID ${CMAKE_C_COMPILER_ID})
+    set(PLIBSYS_COMPILER_ID "")
 endif ()
+
 ExternalProject_Add(
         ${PLIBSYS_PROJ_NAME}
         GIT_REPOSITORY https://github.com/saprykin/plibsys.git
@@ -278,7 +291,11 @@ ExternalProject_Add(
         -DPLIBSYS_BUILD_DOC=${PLIBSYS_BUILD_DOC}
         -DPLIBSYS_TESTS=${PLIBSYS_TESTS}
         -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-        -DCMAKE_C_COMPILER_ID=${PLIBSYS_COMPILER_ID}
+		-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}
+		-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}
+		-DCMAKE_C_FLAGS_MINSIZEREL=${CMAKE_C_FLAGS_MINSIZEREL}
+		-DCMAKE_C_FLAGS_RELWITHDEBINFO=${CMAKE_C_FLAGS_RELWITHDEBINFO}
+        ${PLIBSYS_COMPILER_ID}
 )
 set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
         ${PLIBSYS_SRC_ROOT}/src
@@ -320,6 +337,9 @@ set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
 # Module: VA Smalltalk Virtual Machine
 #------------------------------------------------------------------
 set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es CACHE PATH "ES: Includes")
+
+#-- Set the default installation location of VAST.
+#-- This is used to help locate shared libraries and others
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm.*|ARM.*)")
     if (ES_64BIT)
         set(ES_LIB_SUBFOLDER arm64)
@@ -344,24 +364,56 @@ else ()
     endif ()
 endif ()
 
+#-- For Visual Studio, copy the appropriate import libraries from the default installation to a local location.
+#-- Rename the import libraries so the subsequent find_library cmake command will locate it.
+if(MSVC)
+	if (ES_64BIT)
+		configure_file(${ES_LIB_DEFAULT_INSTALL_LOCATION}/samples/lib/esvm64.lib ${CMAKE_BINARY_DIR}/lib/esvm40.lib COPYONLY)
+	else ()
+		configure_file(${ES_LIB_DEFAULT_INSTALL_LOCATION}/samples/lib/esvm32.lib ${CMAKE_BINARY_DIR}/lib/esvm40.lib COPYONLY)
+	endif ()
+	configure_file(${ES_LIB_DEFAULT_INSTALL_LOCATION}/esvm40.dll ${CMAKE_BINARY_DIR}/lib/esvm40.dll COPYONLY)
+endif()
 
-#-- Find VM dll and copy to bin dir
+#-- Find VM library for linking and copy to bin dir
 find_library(ESVM_LIBRARY
         NAMES esvm40 esvm40.so
         PATHS
         ${ES_LIB_CUSTOM_LOCATION}
         "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
         "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
+		"${CMAKE_BINARY_DIR}/lib"
         NO_DEFAULT_PATH)
 message(STATUS "Found VA Smalltalk VM Library: ${ESVM_LIBRARY}")
-if (WIN32)
-    configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
-else ()
-    configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.so COPYONLY)
-endif ()
+get_filename_component(ESVM_LIBRARY_FILENAME ${ESVM_LIBRARY} NAME)
+
+if(MSVC)
+	foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES} )
+    	configure_file(${ESVM_LIBRARY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG_TYPE}/${ESVM_LIBRARY_FILENAME} COPYONLY)
+	endforeach()
+	
+	#-- To ensure the unit tests work, we also want to copy the runtime dll into the bin directory
+	if(BUILD_TESTING)
+		find_file(ESVM_LIBRARY_DLL
+			NAMES esvm40.dll
+			PATHS
+			${ES_LIB_CUSTOM_LOCATION}
+			"${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
+			"${ES_LIB_DEFAULT_INSTALL_LOCATION}"
+			"${CMAKE_BINARY_DIR}/lib"
+			NO_DEFAULT_PATH)
+		message(STATUS "Found VA Smalltalk VM Library DLL: ${ESVM_LIBRARY_DLL}")
+		get_filename_component(ESVM_LIBRARY_DLL_FILENAME ${ESVM_LIBRARY_DLL} NAME)
+		foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES} )
+			configure_file(${ESVM_LIBRARY_DLL} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG_TYPE}/${ESVM_LIBRARY_DLL_FILENAME} COPYONLY)
+		endforeach()
+	endif()
+else()
+	configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/${ESVM_LIBRARY_FILENAME} COPYONLY)
+endif()
 
 #-- On Windows, find VM dll dependency (esae40.dll) and copy to bin dir
-if (WIN32)
+if (LEGACY_SUPPORT AND WIN32)
     configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
     find_library(ESAE_LIBRARY
             NAMES esae40
@@ -372,6 +424,8 @@ if (WIN32)
             NO_DEFAULT_PATH)
     message(STATUS "Found VA Smalltalk EBCDIC Library: ${ESAE_LIBRARY}")
     configure_file(${ESAE_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esae40.dll COPYONLY)
+else()
+	set(ESAE_LIBRARY "")
 endif ()
 
 set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES} ${ES_INCLUDES})
