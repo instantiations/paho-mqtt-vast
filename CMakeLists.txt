@@ -23,6 +23,12 @@
 #     - Unit testing
 #     - Documentation
 #
+#  Legacy Build Instructions:
+#     If this project is to be linked against versions of the VA Smalltalk virtual machine < 9.2
+#     then add the cmake option LEGACY_SUPPORT=ON. This will make the appropriate adjustments to 
+#     handle updates to virtual machine requirements, header files and so on.
+#     Example: >cmake .. -G"Visual Studio 16 2019" -A x64 -DLEGACY_SUPPORT=ON
+#
 #  Build Instrutions:
 #
 #  Windows
@@ -132,6 +138,7 @@ set(VASTPAHO_PRODUCT_SUBDIR "${VASTPAHO_PRODUCT_VERSION_MAJOR}.${VASTPAHO_PRODUC
 #------------------------------------------------------------------
 option(BUILD_TESTING "Build testsuite" ON)
 option(BUILD_DOCUMENTATION "Build documentation" ON)
+option(LEGACY_SUPPORT "Build using VA Smalltalk versions < 9.2")
 
 #------------------------------------------------------------------
 # Output Settings
@@ -384,10 +391,13 @@ endif ()
 if(MSVC)
 	if (ES_64BIT)
 		configure_file(${ES_LIB_DEFAULT_INSTALL_LOCATION}/samples/lib/esvm64.lib ${CMAKE_BINARY_DIR}/lib/esvm40.lib COPYONLY)
-	else ()
+	else()
 		configure_file(${ES_LIB_DEFAULT_INSTALL_LOCATION}/samples/lib/esvm32.lib ${CMAKE_BINARY_DIR}/lib/esvm40.lib COPYONLY)
-	endif ()
+	endif()
 	configure_file(${ES_LIB_DEFAULT_INSTALL_LOCATION}/esvm40.dll ${CMAKE_BINARY_DIR}/lib/esvm40.dll COPYONLY)
+	if(LEGACY_SUPPORT)
+		configure_file(${ES_LIB_DEFAULT_INSTALL_LOCATION}/esae40.dll ${CMAKE_BINARY_DIR}/lib/esae40.dll COPYONLY)
+	endif()
 endif()
 
 #-- Find VM library for linking and copy to bin dir
@@ -428,17 +438,25 @@ else()
 endif()
 
 #-- On Windows, find VM dll dependency (esae40.dll) and copy to bin dir
-if (LEGACY_SUPPORT AND WIN32)
-    configure_file(${ESVM_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esvm40.dll COPYONLY)
-    find_library(ESAE_LIBRARY
-            NAMES esae40
-            PATHS
-            ${ES_LIB_CUSTOM_LOCATION}
-            "${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
-            "${ES_LIB_DEFAULT_INSTALL_LOCATION}"
-            NO_DEFAULT_PATH)
+#-- Versions of VA Smalltalk >= 9.2 do not require this shared library
+if (WIN32 AND LEGACY_SUPPORT)
+	find_file(ESAE_LIBRARY
+		NAMES esae40.dll
+		PATHS
+		${ES_LIB_CUSTOM_LOCATION}
+		"${ES_C_LIB_SRC_DIR}/es/${ES_LIB_SUBFOLDER}"
+		"${ES_LIB_DEFAULT_INSTALL_LOCATION}"
+		"${CMAKE_BINARY_DIR}/lib"
+		NO_DEFAULT_PATH)
     message(STATUS "Found VA Smalltalk EBCDIC Library: ${ESAE_LIBRARY}")
-    configure_file(${ESAE_LIBRARY} ${CMAKE_BINARY_DIR}/bin/esae40.dll COPYONLY)
+	get_filename_component(ESAE_LIBRARY_FILENAME ${ESAE_LIBRARY} NAME)
+	if(MSVC)
+		foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES} )
+			configure_file(${ESAE_LIBRARY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG_TYPE}/${ESAE_LIBRARY_FILENAME} COPYONLY)
+		endforeach()
+	else()
+		configure_file(${ESAE_LIBRARY} ${CMAKE_BINARY_DIR}/bin/${ESAE_LIBRARY_FILENAME} COPYONLY)
+	endif()
 else()
 	set(ESAE_LIBRARY "")
 endif ()
@@ -449,6 +467,9 @@ set(VAST_PAHO_LIBS ${VAST_PAHO_LIBS} ${ESAE_LIBRARY} ${ESVM_LIBRARY})
 #------------------------------------------------------------------
 # Build Instructions: Common
 #------------------------------------------------------------------
+if(LEGACY_SUPPORT)
+	list(APPEND VAST_PAHO_DEFS -DES_LEGACY_SUPPORT)
+endif()
 
 #-- Add common defs
 add_definitions(${VAST_PAHO_DEFS})
