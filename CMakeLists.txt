@@ -25,23 +25,37 @@
 #
 #  Build Instrutions:
 #
-#     Visual Studio 17 64-bit (Windows)
+#  Windows
+#     Visual Studio 19 64-bit
+#     >mkdir build && cd build
+#     >cmake .. -G"Visual Studio 16 2019" -A x64 -DBUILD_TESTING=ON
+#     >msbuild paho-mqtt-vast.sln /p:Configuration=Release /p:Platform=x64 /m
+#     >ctest -C "Release"
+#
+#     Visual Studio 19 32-bit
+#     >mkdir build && cd build
+#     >cmake .. -G"Visual Studio 16 2019" -A Win32 -DBUILD_TESTING=ON
+#     >msbuild paho-mqtt-vast.sln /p:Configuration=Release /p:Platform=Win32 /m
+#     >ctest -C "Release"
+#
+#     Visual Studio 17 64-bit
 #     >mkdir build && cd build
 #     >cmake .. -G"Visual Studio 15 2017 Win64" -DBUILD_TESTING=ON
 #     >msbuild paho-mqtt-vast.sln /p:Configuration=Release /p:Platform=x64 /m
 #     >ctest -C "Release"
 #
-#     Visual Studio 17 32-bit (Windows)
+#     Visual Studio 17 32-bit
 #     >mkdir build && cd build
 #     >cmake .. -G"Visual Studio 15 2017"  -DBUILD_TESTING=ON
 #     >msbuild paho-mqtt-vast.sln /p:Configuration=Release /p:Platform=Win32 /m
 #     >ctest -C "Release"
 #
-#     Mingw-w64 (Windows)
+#     Mingw-w64
 #     >mkdir build && cd build
 #     >cmake .. -G"MinGW Makefiles" -DBUILD_DOCUMENTATION=ON
 #     >mingw32-make docs
 #
+#  Linux
 #     Linux 64-bit (or Linux 32-bit on a 32-bit Linux OS)
 #     >mkdir build && cd build
 #     >cmake .. -G"Unix Makefiles"
@@ -166,7 +180,7 @@ if (MINGW)
     #-- Do not rely on this being defined in mingw...it just happens to be defined when using
     #-- gnu standard...but not c standard
     add_definitions(-DWIN32)
-    if (NOT VM_64BIT)
+    if (NOT ES_64BIT)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--enable-stdcall-fixup")
     endif ()
 endif ()
@@ -286,6 +300,7 @@ ExternalProject_Add(
         UPDATE_DISCONNECTED 1
         STEP_TARGETS build
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
+        CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=${PLIBSYS_BIN_ROOT}
         -DPLIBSYS_BUILD_DOC=${PLIBSYS_BUILD_DOC}
