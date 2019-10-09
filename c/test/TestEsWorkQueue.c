@@ -98,7 +98,7 @@ static pboolean test_sync_currentThreadProducer() {
     Counter = 0;
     Queue = EsWorkQueue_new(ESQ_TYPE_SYNCHRONOUS);
     ES_ASSERT(Counter == 0);
-    for (int i = 0; i < numTasks; i++) {
+    for (U_32 i = 0; i < numTasks; i++) {
         EsWorkTask *task = NULL;
 
         task = EsWorkTask_newInit(counterWorkTaskFunc, (void *) (U_PTR) 1);
