@@ -335,7 +335,7 @@ set(MQTT_PAHO_BIN_ROOT ${ES_C_THIRDPARTY_BIN_DIR}/mqtt-paho-c)
 ExternalProject_Add(
         ${MQTT_PAHO_PROJ_NAME}
         GIT_REPOSITORY https://github.com/eclipse/paho.mqtt.c.git
-        GIT_TAG tags/v1.3.0
+        GIT_TAG tags/v1.3.1
         GIT_SHALLOW true
         GIT_PROGRESS true
         SOURCE_DIR ${MQTT_PAHO_SRC_ROOT}
