@@ -31,7 +31,7 @@
 #ifndef ES_PROPERTIES_H
 #define ES_PROPERTIES_H
 
-#include "escompiler.h"
+#include "escomp.h"
 
 /**************************/
 /*   D A T A  T Y P E S   */

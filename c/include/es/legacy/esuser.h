@@ -16,7 +16,7 @@
 #ifndef ESUSER_H
 #define ESUSER_H
 
-#include "escompiler.h"
+#include "escomp.h"
 
 /********************************************/
 /*  S M A L L T A L K  I M M E D I A T E S  */

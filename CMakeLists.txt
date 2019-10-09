@@ -358,7 +358,6 @@ set(VAST_PAHO_DEPS ${VAST_PAHO_DEPS} ${MQTT_PAHO_PROJ_NAME})
 #------------------------------------------------------------------
 # Module: VA Smalltalk Virtual Machine
 #------------------------------------------------------------------
-set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es CACHE PATH "ES: Includes")
 
 #-- Set the default installation location of VAST.
 #-- This is used to help locate shared libraries and others
@@ -385,6 +384,13 @@ else ()
         set(ES_LIB_DEFAULT_INSTALL_LOCATION "/usr/local/VASmalltalk/9.2x86/bin")
     endif ()
 endif ()
+
+set(ES_INCLUDES ${ES_C_INC_SRC_DIR}/es CACHE PATH "ES: Includes")
+if(LEGACY_SUPPORT)
+	list(APPEND ES_INCLUDES ${ES_C_INC_SRC_DIR}/es/legacy)
+else()
+	list(APPEND ES_INCLUDES ${ES_LIB_DEFAULT_INSTALL_LOCATION}/samples/include)
+endif()
 
 #-- For Visual Studio, copy the appropriate import libraries from the default installation to a local location.
 #-- Rename the import libraries so the subsequent find_library cmake command will locate it.
