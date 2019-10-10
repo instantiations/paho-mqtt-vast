@@ -16,6 +16,7 @@
 #include "EsMqttAsyncArguments.h"
 #include "EsWorkTask.h"
 
+
 /***************************/
 /*   P R O T O T Y P E S   */
 /***************************/
@@ -70,13 +71,44 @@ static BOOLEAN publishedHandler(EsMqttAsyncMessage *message);
 static BOOLEAN checkpointHandler(EsMqttAsyncMessage *message);
 
 
+/*******************/
+/*   M A C R O S   */
+/*******************/
+
+/**
+ * @brief Post a receiver>>selector with args message
+ * to the VA Smalltalk async queue for processing
+ * @note Legacy support will require passing in the context
+ * while newer support will using only the globalInfo
+ * EsPostAsyncMessageThruGlobal was not historically exported
+ * by older versions of VA Smalltalk.
+ *
+ * @param _rec EsObject receiver
+ * @param _sel EsObject selector
+ * @param _argCnt int number of variadic args
+ * @param ... EsObject args
+ * @return TRUE if success, FALSE otherwise
+ */
+#ifndef ES_LEGACY_SUPPORT
+#define EsMqttPostAsyncMessage(_rec, _sel, _argCnt, ...) \
+		EsPostAsyncMessageThruGlobal(_DummyVMContext.globalInfo, _rec, _sel, _argCnt, __VA_ARGS__)
+#else
+#define EsMqttPostAsyncMessage(_rec, _sel, _argCnt, ...) \
+		EsPostAsyncMessage(&_DummyVMContext, _rec, _sel, _argCnt, __VA_ARGS__)
+#endif
+
+
 /*******************************************/
 /*   M O D U L E  P R I V A T E  V A R S   */
 /*******************************************/
 
 /**
  * @brief Dummy vmContext for globalInfo access
+ * Used as container for globalInfo for calls
+ * to EsPostAsyncMessageThruGlobal. This container
+ * is used for compat with the legacy flag below
  *
+ * ES_LEGACY_SUPPORT
  * EsPostAsyncMessage() calls require a vmContext
  * only for globalInfo access. These calls are made
  * from callbacks coming in on a separate thread.
@@ -271,8 +303,7 @@ static BOOLEAN traceHandler(EsMqttAsyncMessage *message) {
 
     traceStrCopy = EsCopyString(traceStr);
     hiLowFromPointer(traceStrCopy, &traceStrHigh, &traceStrLow);
-    return EsPostAsyncMessage(
-            &_DummyVMContext,
+    return EsMqttPostAsyncMessage(
             message->receiver,
             message->selector,
             3,
@@ -289,8 +320,7 @@ static BOOLEAN connectionLostHandler(EsMqttAsyncMessage *message) {
     I_32 causeHigh, causeLow;
 
     hiLowFromPointer(causeCopy, &causeHigh, &causeLow);
-    return EsPostAsyncMessage(
-            &_DummyVMContext,
+    return EsMqttPostAsyncMessage(
             message->receiver,
             message->selector,
             3,
@@ -308,8 +338,7 @@ static BOOLEAN disconnectedHandler(EsMqttAsyncMessage *message) {
     I_32 propertiesHigh, propertiesLow;
 
     hiLowFromPointer(propertiesCopy, &propertiesHigh, &propertiesLow);
-    return EsPostAsyncMessage(
-            &_DummyVMContext,
+    return EsMqttPostAsyncMessage(
             message->receiver,
             message->selector,
             4,
@@ -332,8 +361,7 @@ static BOOLEAN messageArrivedHandler(EsMqttAsyncMessage *message) {
 
     hiLowFromPointer(topicNameCopy, &topicNameHigh, &topicNameLow);
     hiLowFromPointer(clientMessageCopy, &messageHigh, &messageLow);
-    return EsPostAsyncMessage(
-            &_DummyVMContext,
+    return EsMqttPostAsyncMessage(
             message->receiver,
             message->selector,
             6,
@@ -349,8 +377,7 @@ static BOOLEAN deliveryCompleteHandler(EsMqttAsyncMessage *message) {
     void *context = message->args[0].ptr;
     MQTTClient_deliveryToken token = message->args[1].token;
 
-    return EsPostAsyncMessage(
-            &_DummyVMContext,
+    return EsMqttPostAsyncMessage(
             message->receiver,
             message->selector,
             2,
@@ -369,8 +396,7 @@ static BOOLEAN publishedHandler(EsMqttAsyncMessage *message) {
     I_32 propertiesHigh, propertiesLow;
 
     hiLowFromPointer(propertiesCopy, &propertiesHigh, &propertiesLow);
-    return EsPostAsyncMessage(
-            &_DummyVMContext,
+    return EsMqttPostAsyncMessage(
             message->receiver,
             message->selector,
             6,
@@ -385,8 +411,7 @@ static BOOLEAN publishedHandler(EsMqttAsyncMessage *message) {
 static BOOLEAN checkpointHandler(EsMqttAsyncMessage *message) {
     I_32 id = message->args[0].i;
 
-    return EsPostAsyncMessage(
-            &_DummyVMContext,
+    return EsMqttPostAsyncMessage(
             message->receiver,
             message->selector,
             1,
