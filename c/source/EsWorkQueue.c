@@ -7,11 +7,11 @@
  *  @brief Work Queue Interface for executing tasks
  *  @author Seth Berman
  *******************************************************************************/
+#include <stdlib.h>
+
 #include "plibsys.h"
 
 #include "EsWorkQueue.h"
-
-#include <stdlib.h>
 
 /*******************/
 /*   M A C R O S   */

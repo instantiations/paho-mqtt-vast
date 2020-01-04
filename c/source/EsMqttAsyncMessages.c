@@ -10,8 +10,6 @@
 #include "plibsys.h"
 #include "MQTTClient.h"
 
-#include "esuser.h"
-
 #include "EsMqttAsyncMessages.h"
 #include "EsMqttAsyncArguments.h"
 #include "EsWorkTask.h"

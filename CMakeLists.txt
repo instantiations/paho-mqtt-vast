@@ -493,6 +493,7 @@ set(VAST_PAHO_INCLUDES ${VAST_PAHO_INCLUDES}
         CACHE PATH "VAST PAHO: Headers")
 
 set(VAST_SOURCES
+		${ES_C_SRC_DIR}/EsMqtt.h
         ${ES_C_SRC_DIR}/EsProperties.h
         ${ES_C_SRC_DIR}/EsProperties.c
         ${ES_C_SRC_DIR}/EsWorkQueue.h

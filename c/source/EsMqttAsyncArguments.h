@@ -21,9 +21,9 @@
 #ifndef ES_MQTT_ASYNC_ARGUMENTS_H
 #define ES_MQTT_ASYNC_ARGUMENTS_H
 
-#include "esuser.h"
-
 #include "MQTTClient.h"
+
+#include "EsMqtt.h"
 
 /***********************************/
 /*   S E T U P / S H U T D O W N   */

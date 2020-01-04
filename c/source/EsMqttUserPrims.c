@@ -8,8 +8,8 @@
  *  @author Seth Berman
  *******************************************************************************/
 #include "plibsys.h"
-#include "esuser.h"
 
+#include "EsMqtt.h"
 #include "EsMqttUserPrims.h"
 #include "EsMqttCallbacks.h"
 #include "EsMqttLibrary.h"

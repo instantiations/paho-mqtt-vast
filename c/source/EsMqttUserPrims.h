@@ -27,7 +27,7 @@
 #ifndef ES_MQTT_USER_PRIMS_H
 #define ES_MQTT_USER_PRIMS_H
 
-#include "esuser.h"
+#include "EsMqtt.h"
 
 /************************************/
 /*   U S E R  P R I M I T I V E S   */

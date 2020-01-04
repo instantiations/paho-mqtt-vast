@@ -2,8 +2,6 @@
 #include "EsWorkQueue.h"
 #include "EsWorkTask.h"
 
-#include "esuser.h"
-
 static U_PTR Counter = 0;
 static EsWorkQueue *Queue;
 static pboolean FreeFuncCalled = FALSE;

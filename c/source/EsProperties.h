@@ -31,7 +31,7 @@
 #ifndef ES_PROPERTIES_H
 #define ES_PROPERTIES_H
 
-#include "escomp.h"
+#include "EsMqtt.h"
 
 /**************************/
 /*   D A T A  T Y P E S   */

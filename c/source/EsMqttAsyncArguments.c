@@ -7,11 +7,11 @@
  *  @brief Asynchronous Message Argument Preparation Implementation
  *  @author Seth Berman
  *******************************************************************************/
+#include <string.h>
+
 #include "MQTTClient.h"
 
 #include "EsMqttAsyncArguments.h"
-
-#include <string.h>
 
 /*********************/
 /*   U T I L I T Y   */
@@ -65,13 +65,13 @@ char *EsCopyString(char *str) {
 
 char *EsCopyTopicString(char *topicStr, I_32 len) {
     char *heapCopy;
-    I_32 actualLen;
+    U_SIZE actualLen;
 
     if (topicStr == NULL) {
         return NULL;
     }
 
-    actualLen = (len == 0) ? (I_32) strlen(topicStr) : len;
+    actualLen = (len == 0) ? strlen(topicStr) : (U_SIZE)len;
     heapCopy = (char *) EsAllocateMemory(actualLen + 1);
     strncpy(heapCopy, topicStr, actualLen);
     return heapCopy;

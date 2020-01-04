@@ -7,10 +7,8 @@
  *  @brief MQTT Paho C MQClient Callbacks Implementation for VA Smalltalk
  *  @author Seth Berman
  *******************************************************************************/
-
 #include "plibsys.h"
 #include "MQTTClient.h"
-#include "esuser.h"
 
 #include "EsMqttCallbacks.h"
 #include "EsMqttAsyncMessages.h"

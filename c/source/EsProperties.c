@@ -7,10 +7,10 @@
  *  @brief Key/Value String Properties Container Implementation
  *  @author Seth Berman
  *******************************************************************************/
-#include "EsProperties.h"
-
 #include <stdlib.h>
 #include <string.h>
+
+#include "EsProperties.h"
 
 /**
  * @brief BOOLEAN string comparison.
@@ -52,9 +52,11 @@ struct _EsProperties {
  */
 static EsProperty *newProperty(const char *key, char *value) {
     EsProperty *node = (EsProperty *) malloc(sizeof(*node));
-    node->key = key;
-    node->value = strdup(value); /* Store Copy */
-    node->next = NULL;
+	if (node != NULL) {
+		node->key = key;
+		node->value = strdup(value); /* Store Copy */
+		node->next = NULL;
+	}
     return node;
 }
 

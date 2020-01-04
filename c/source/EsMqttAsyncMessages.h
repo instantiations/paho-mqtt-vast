@@ -51,8 +51,6 @@
 #ifndef ES_MQTT_ASYNC_QUEUE_MESSAGES_H
 #define ES_MQTT_ASYNC_QUEUE_MESSAGES_H
 
-#include "esuser.h"
-
 #include "EsMqttCallbacks.h"
 
 /**************************/

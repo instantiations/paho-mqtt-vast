@@ -33,7 +33,7 @@
 #ifndef ES_MQTT_CALLBACKS_H
 #define ES_MQTT_CALLBACKS_H
 
-#include "esuser.h"
+#include "EsMqtt.h"
 
 /*****************/
 /*   E N U M S   */

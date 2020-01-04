@@ -13,7 +13,7 @@
 #ifndef ES_MQTT_LIBRARY_H
 #define ES_MQTT_LIBRARY_H
 
-#include "esuser.h"
+#include "EsMqtt.h"
 
 /*************************/
 /*   C O N S T A N T S   */

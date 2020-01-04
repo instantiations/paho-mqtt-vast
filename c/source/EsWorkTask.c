@@ -7,9 +7,9 @@
  *  @brief Executable Work Task Implementation
  *  @author Seth Berman
  *******************************************************************************/
-#include "EsWorkTask.h"
-
 #include <stdlib.h>
+
+#include "EsWorkTask.h"
 
 /**************************/
 /*   D A T A  T Y P E S   */
