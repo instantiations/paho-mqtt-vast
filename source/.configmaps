@@ -1,0 +1,27 @@
+[
+	{
+		#applications : [
+			'MQTTApp' : 'tonel v10'
+		],
+		#conditions : [ ],
+		#name : 'MQTT-Paho',
+		#versionName : '1.8',
+		#comment : ''
+	},
+	{
+		#applications : [
+			'MQTTTestApp' : 'tonel v10'
+		],
+		#conditions : [
+			{
+				#condition : 'true',
+				#requiredMaps : [
+					'MQTT-Paho' : '1.8'
+				]
+			}
+		],
+		#name : 'MQTT-Paho Tests',
+		#versionName : '1.9',
+		#comment : ''
+	}
+]
