@@ -1,5 +1,5 @@
 <p align="center"><img src="assets/logos/128x128.png">
- <h1 align="center">Eclipse Paho Client for VA Smalltalk</h1>
+ <h1 align="center">Eclipse Paho Client for VAST Platform (VA Smalltalk)</h1>
   <p align="center">
     High Performance MQTT Client implementation for the <br>
     Enterprise-class VA Smalltalk Environment
