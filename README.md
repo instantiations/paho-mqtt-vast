@@ -1,36 +1,18 @@
-<p align="center"><img src="assets/logos/128x128.png">
- <h1 align="center">Eclipse Paho Client for VAST Platform (VA Smalltalk)</h1>
-  <p align="center">
-    High Performance MQTT Client implementation for the <br>
-    Enterprise-class VA Smalltalk Environment
-    <br>
-    <a href="docs/"><strong>Explore the docs »</strong></a>
-    <br>
-    <br>
-    <a href="https://github.com/vasmalltalk/paho-mqtt-vast/issues/new?labels=Type%3A+Defect">Report a defect</a>
-    |
-    <a href="https://github.com/vasmalltalk/paho-mqtt-vast/issues/new?labels=Type%3A+Feature">Request feature</a>
-  </p>
-</p>
+# DEPRECATED Eclipse Paho Client for VAST Platform (VA Smalltalk)
 
-[![GitHub release](https://img.shields.io/github/release/vasmalltalk/paho-mqtt-vast.svg)](https://github.com/vasmalltalk/paho-mqtt-vast/releases/latest)
-[![](https://img.shields.io/badge/license-MIT-ff69b4.svg)](https://opensource.org/licenses/MIT)
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+
+
 
 ## About
 
-**Under Construction**
+This is an abandoned and unsupported implementation of an MQTT Client v3 for old versions of VAST Platform.
+
+[VAST Platform v12.0](https://www.instantiations.com/vast-platform/version-history/) ships with a new enterprise-grade and extensible MQTT client, written in pure Smalltalk, with support for version 3, 3.11, and 5 protocols. All protocol details are handled internally by the software and run over traditional TLS or non-TLS native sockets. Even VAST's new asynchronous streams are already integrated for easy consumption of publish/subscription updates.
 
 ## License
 - The code is licensed under [MIT](LICENSE).
 - The documentation is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/).
-
-## Quick Start
-
-**Under Construction**
-
-## Installation
-
-To use this project in VA Smalltalk, follow these [instructions](docs/Installation.md).
 
 ## Contributing
 
